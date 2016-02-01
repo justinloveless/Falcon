@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">Falcon Test</string>
+    <string name="setIPAddress">xxx.xxx.xxx.xxx</string>
+    <string name="setIPButton">Set IP Address</string>
+    <string name="IPAddress">xxx.xxx.xxx.xxx</string>
+    <string name="mvToWebViewButton">Move to Web View Activity</string>
+    <string name="mvToNavDrwrButton">Move to Navigation Drawer Activity</string>
+    <string name="title_activity_nav">NavActivity</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <string name="action_settings">Settings</string>
+    <string name="nav_IPChecker">IP Address:</string>
+</resources>
