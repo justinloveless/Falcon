@@ -39,5 +39,71 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true" />
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="@string/usernameLabel"
+        android:id="@+id/UsernameLabel"
+        android:layout_alignBottom="@+id/editUsername"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/editUsername"
+        android:editable="true"
+        android:maxLength="15"
+        android:maxLines="1"
+        android:enabled="true"
+        android:layout_alignBottom="@+id/setUserButton"
+        android:layout_alignLeft="@+id/setIP"
+        android:layout_alignStart="@+id/setIP"
+        android:minWidth="100dp" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/setUser"
+        android:id="@+id/setUserButton"
+        android:layout_below="@+id/setIPButton"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_alignLeft="@+id/setIPButton"
+        android:layout_alignStart="@+id/setIPButton" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/setPassword"
+        android:id="@+id/setPassButton"
+        android:layout_below="@+id/setUserButton"
+        android:layout_alignLeft="@+id/setUserButton"
+        android:layout_alignStart="@+id/setUserButton" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/editPassword"
+        android:editable="true"
+        android:maxLength="15"
+        android:maxLines="1"
+        android:enabled="true"
+        android:minWidth="100dp"
+        android:layout_alignBottom="@+id/setPassButton"
+        android:layout_toRightOf="@+id/IPaddrLabel"
+        android:layout_toEndOf="@+id/IPaddrLabel" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="@string/passwordLabel"
+        android:id="@+id/password"
+        android:layout_alignBottom="@+id/editPassword"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
 
 </RelativeLayout>

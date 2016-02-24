@@ -2,28 +2,35 @@ package com.example.justin.falcontest;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.view.View;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.Snackbar;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.method.ScrollingMovementMethod;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
-
-import static com.example.justin.falcontest.SSH.executeRemoteCmd;
 
 public class NavActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
     SharedPreferences mPrefs;
     String IpAddress;
+    String Username;
+    String Password;
     TextView IpChecker;
     TextView SSHResponse;
+    String RPiResponse = "original";
+    EditText edit_cmd;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -31,10 +38,13 @@ public class NavActivity extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        edit_cmd = (EditText) findViewById(R.id.editCommand);
 
         //Shared variables
         mPrefs = getSharedPreferences("SETTINGS", 0);
         IpAddress = mPrefs.getString("IP", "xxx.xxx.xxx.xxx");
+        Username = mPrefs.getString("Username", "pi");
+        Password = mPrefs.getString("Password", "raspberry");
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -44,6 +54,7 @@ public class NavActivity extends AppCompatActivity
                         .setAction("Action", null).show();
             }
         });
+
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -58,11 +69,101 @@ public class NavActivity extends AppCompatActivity
         IpChecker.setText(IpAddress);
 
         SSHResponse = (TextView) findViewById(R.id.SSHResponse);
+        //enable textview to be scrollable if contents are too long
+        SSHResponse.setMovementMethod(new ScrollingMovementMethod());
         try {
-            SSHResponse.setText( SSH.executeRemoteCmd("pi", "raspberry", IpAddress,22,"ls"));
+            SSHResponse.setText( SSH.executeRemoteCmd(edit_cmd.getText().toString()));
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        final Button SendBtn = (Button) findViewById(R.id.SendCmd);
+
+        SendBtn.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v){
+                final String cmd = edit_cmd.getText().toString();
+                new AsyncTask<Integer, Void, Void>(){
+
+                    protected String onProgressUpdate (String... values){
+                        RPiResponse = "Progress Update";
+                        return RPiResponse;
+                    }
+
+                    protected Void doInBackground(Integer... params){
+                        try {
+                           RPiResponse = SSH.executeRemoteCmd(cmd );
+                            publishProgress();
+
+                        }catch (Exception e){
+                            e.printStackTrace();
+                            Log.d("Exception", "    exception occured");
+
+                            RPiResponse = "Exception";
+                        }
+                        return null;
+                    }
+
+                    protected  void onPostExecute(Void v){
+                        SSHResponse.setText(RPiResponse);
+                    }
+                }.execute();
+                //SSHResponse.setText(RPiResponse);
+            }
+        });
+
+        final Button connect = (Button) findViewById(R.id.connectButton);
+
+        connect.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick (View v){
+                new AsyncTask<Integer, Void, Void>(){
+                    protected Void doInBackground(Integer... params){
+                        try {
+                            SSH.connect(Username,Password,IpAddress, 22);
+                            RPiResponse = "Connected to " + IpAddress;
+
+                        }catch (Exception e){
+                            e.printStackTrace();
+                            Log.d("Exception", "    exception occured");
+                            RPiResponse = "Could not Connect";
+                        }
+                        return null;
+                    }
+
+                    protected  void onPostExecute(Void v){
+                        SSHResponse.setText(RPiResponse);
+                    }
+                }.execute();
+            }
+        });
+
+        final Button disconnect = (Button) findViewById(R.id.disconnectButton);
+
+        disconnect.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v){
+                new AsyncTask<Integer, Void, Void>(){
+                    protected Void doInBackground(Integer... params){
+                        try {
+                            SSH.disconnect();
+                            RPiResponse = "Disconnected from " + IpAddress;
+
+                        }catch (Exception e){
+                            e.printStackTrace();
+                            Log.d("Exception", "    exception occured");
+                            RPiResponse = "Could not disconnect";
+                        }
+                        return null;
+                    }
+
+                    protected  void onPostExecute(Void v){
+                        SSHResponse.setText(RPiResponse);
+                    }
+                }.execute();
+            }
+        });
     }
 
     @Override
@@ -118,7 +219,10 @@ public class NavActivity extends AppCompatActivity
             Intent intent = new Intent(NavActivity.this, MainActivity.class);
             startActivity(intent);
 
-        } else if (id == R.id.nav_slideshow) {
+        } else if (id == R.id.nav_websocket) {
+            // Handle the web socket activity
+            Intent intent = new Intent(NavActivity.this, Websocket.class);
+            startActivity(intent);
 
         } else if (id == R.id.nav_manage) {
 
