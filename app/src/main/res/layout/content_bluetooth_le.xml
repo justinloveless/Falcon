@@ -10,4 +10,40 @@
     tools:showIn="@layout/app_bar_bluetooth_le"
     tools:context="com.example.justin.falcontest.BluetoothLE">
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="New Text"
+        android:id="@+id/deviceName"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true" />
+
+    <ListView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/serviceList"
+        android:smoothScrollbar="true"
+        android:layout_below="@+id/scanBtn"
+        android:layout_alignParentStart="false"
+        android:layout_alignBottom="@+id/textView2"
+        android:layout_marginBottom="20dp" />
+
+    <Button
+        style="?android:attr/buttonStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Scan"
+        android:id="@+id/scanBtn"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="New Text"
+        android:id="@+id/textView2"
+        android:layout_marginTop="200dp"
+        android:layout_below="@+id/scanBtn"
+        android:layout_alignParentStart="true" />
+
 </RelativeLayout>

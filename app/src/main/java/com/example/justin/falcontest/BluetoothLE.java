@@ -13,9 +13,11 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.provider.Settings;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.view.View;
@@ -27,6 +29,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -66,11 +72,19 @@ public class BluetoothLE extends AppCompatActivity
     private BluetoothAdapter mBluetoothAdapter;
     private int REQUEST_ENABLE_BT = 1;
     private Handler mHandler;
-    private static final long SCAN_PERIOD = 10000;
+    private static final long SCAN_PERIOD = 10000; //10 seconds
     private BluetoothLeScanner mLEScanner;
     private List<ScanFilter> filters;
     private BluetoothGatt mGatt;
     public ScanSettings settings;
+    public ListView serviceList;
+    public String[] serviceArray = {"Item 1", "Item 2", "Item 3", "Item 4", "Item 5", "Item 6", "Item 7", "Item 8",
+        "Item 9", "Item 10", "Item 11", "Item 12", "Item 13", "Item 14", "Item 15"};
+    public ArrayList<String> sArray = new ArrayList<String>();
+    public ArrayAdapter ServiceAdapter;
+    public TextView deviceName;
+    public Button scan;
+    public String devName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -97,6 +111,30 @@ public class BluetoothLE extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
+        scan = (Button) findViewById(R.id.scanBtn);
+        scan.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick (View v){
+                sArray.clear();
+                ServiceAdapter.notifyDataSetChanged();
+                serviceList.invalidateViews();
+                scanLeDevice(true);
+            }
+        });
+
+        sArray.add("Item 1");
+        ServiceAdapter = new ArrayAdapter<String>(this, R.layout.activity_listview, sArray);
+        serviceList = (ListView) findViewById(R.id.serviceList);
+        serviceList.setAdapter(ServiceAdapter);
+        //add new string to array
+        sArray.add("Item 2");
+        //update content
+        ServiceAdapter.notifyDataSetChanged();
+        //redraw view
+        serviceList.invalidateViews();
+
+
+        //***********Bluetooth stuff**************//
         mHandler = new Handler();
         if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)){
             Toast.makeText(this, "BLE not supported", Toast.LENGTH_SHORT).show();
@@ -123,6 +161,13 @@ public class BluetoothLE extends AppCompatActivity
             }
         }
 
+        //turn on location services if they aren't already
+        //  (BLE scan won't work without GPS on for some arcane reason)
+        final LocationManager manager = (LocationManager) getSystemService( Context.LOCATION_SERVICE );
+        if ( !manager.isProviderEnabled( LocationManager.GPS_PROVIDER ) ) {
+            Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+            startActivity(intent);
+        }
 
     }
 
@@ -133,7 +178,6 @@ public class BluetoothLE extends AppCompatActivity
             drawer.closeDrawer(GravityCompat.START);
         } else {
             super.onBackPressed();
-            //onDestroy();
         }
     }
 
@@ -234,12 +278,21 @@ public class BluetoothLE extends AppCompatActivity
 
     @Override
     protected void onDestroy() {
+
         super.onDestroy();
-        if (mGatt == null) {
-            return;
+        try {
+            Log.d("onDestroy", "Got past super.onDestroy()");
+            if (mGatt == null) {
+                Log.d("onDestroy", "mGatt is null");
+                return;
+            }
+            Log.d("onDestroy", "mGatt is not null");
+            mGatt.close();
+            mGatt = null;
         }
-        mGatt.close();
-        mGatt = null;
+        catch (Exception e) {
+            Log.e("onDestroy", e.getMessage().toString());
+        }
     }
 
     @Override
@@ -271,6 +324,7 @@ public class BluetoothLE extends AppCompatActivity
             if (Build.VERSION.SDK_INT < 21) {
                 mBluetoothAdapter.startLeScan(mLeScanCallback);
             } else {
+                Log.d("BLE Scan", "about to start scan");
                 mLEScanner.startScan(filters, settings, mScanCallback);
             }
         } else {
@@ -288,6 +342,22 @@ public class BluetoothLE extends AppCompatActivity
             Log.i("callbackType", String.valueOf(callbackType));
             Log.i("result", result.toString());
             BluetoothDevice btDevice = result.getDevice();
+            if (result.getScanRecord().getDeviceName() != null) {
+                devName = result.getScanRecord().getDeviceName().toString();
+                if (!existsInArray(sArray, devName)){//only unique values
+                    //add new string to array
+                    sArray.add(devName);
+                    //update content
+                    ServiceAdapter.notifyDataSetChanged();
+                    //redraw view
+                    serviceList.invalidateViews();
+                }
+            }
+            else {
+                devName = "null";
+            }
+            Log.i("device Name", devName);
+
             connectToDevice(btDevice);
         }
 
@@ -323,6 +393,14 @@ public class BluetoothLE extends AppCompatActivity
         if (mGatt == null) {
             mGatt = device.connectGatt(this, false, gattCallback);
             scanLeDevice(false);// will stop after first device detection
+            try {
+                deviceName.setText(device.getName().toString());
+            } catch (Exception e) {
+                Log.e("ConnectToDevice", "Unable to set name. Device: " + device.toString()
+                        + "\nName: " + device.getName()
+                        + "\nError: " + e.getMessage() + " at line " + e.getStackTrace()[2].getLineNumber());
+
+            }
         }
     }
 
@@ -348,8 +426,18 @@ public class BluetoothLE extends AppCompatActivity
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             List<BluetoothGattService> services = gatt.getServices();
             Log.i("onServicesDiscovered", services.toString());
+            //add services to array
+            sArray.add(services.toString());
+            //update content
+            ServiceAdapter.notifyDataSetChanged();
+            //redraw listview
+            serviceList.invalidateViews();
             gatt.readCharacteristic(services.get(1).getCharacteristics().get
                     (0));
+            sArray.add(mGatt.toString());
+            ServiceAdapter.notifyDataSetChanged();
+            serviceList.invalidateViews();
+
         }
 
         @Override
@@ -391,7 +479,14 @@ public class BluetoothLE extends AppCompatActivity
 
 
 
-
+    public boolean existsInArray (ArrayList<String> array, String s) {
+        for (String str : array){
+            if (s.equalsIgnoreCase(str)){
+                return true;
+            }
+        }
+        return false;
+    }
 
 
 
