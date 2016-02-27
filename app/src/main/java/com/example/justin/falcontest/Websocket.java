@@ -1,11 +1,11 @@
 package com.example.justin.falcontest;
 
+import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.util.Log;
-import android.view.View.*;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -14,7 +14,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.view.View;
@@ -96,13 +95,27 @@ public class Websocket extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_camara) {
-            // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
+        if (id == R.id.nav_webview) {
+            // Handle the webview activity
+            Intent intent = new Intent(Websocket.this, Picam.class);
+            String IpAddr = "@string/IPAddress";
+            intent.putExtra("IP", IpAddr);
+            startActivity(intent);
 
-        } else if (id == R.id.nav_slideshow) {
+        } else if (id == R.id.nav_ipsettings) {
+            // Handle the ip settings activity
+            Intent intent = new Intent(Websocket.this, MainActivity.class);
+            startActivity(intent);
 
-        } else if (id == R.id.nav_manage) {
+        } else if (id == R.id.nav_websocket) {
+            // Handle the web socket activity
+            Intent intent = new Intent(Websocket.this, Websocket.class);
+            startActivity(intent);
+
+        } else if (id == R.id.nav_home) {
+            // Handle the main activity
+            Intent intent = new Intent(Websocket.this, NavActivity.class);
+            startActivity(intent);
 
         } else if (id == R.id.nav_share) {
 

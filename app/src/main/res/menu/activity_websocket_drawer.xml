@@ -2,14 +2,14 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <group android:checkableBehavior="single">
-        <item android:id="@+id/nav_camara" android:icon="@android:drawable/ic_menu_camera"
-            android:title="Import" />
-        <item android:id="@+id/nav_gallery" android:icon="@android:drawable/ic_menu_gallery"
-            android:title="Gallery" />
-        <item android:id="@+id/nav_slideshow" android:icon="@android:drawable/ic_menu_slideshow"
-            android:title="Slideshow" />
-        <item android:id="@+id/nav_manage" android:icon="@android:drawable/ic_menu_manage"
-            android:title="Tools" />
+        <item android:id="@+id/nav_home" android:icon="@android:drawable/ic_menu_more"
+        android:title="Home" />
+        <item android:id="@+id/nav_webview" android:icon="@android:drawable/ic_menu_view"
+            android:title="PiCam" />
+        <item android:id="@+id/nav_ipsettings" android:icon="@android:drawable/ic_menu_manage"
+            android:title="IP Settings" />
+        <item android:id="@+id/nav_bluetooth" android:icon="@android:drawable/ic_menu_compass"
+            android:title="Bluetooth LE" />
     </group>
 
     <item android:title="Communicate">

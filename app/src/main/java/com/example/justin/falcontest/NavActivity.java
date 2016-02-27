@@ -224,7 +224,10 @@ public class NavActivity extends AppCompatActivity
             Intent intent = new Intent(NavActivity.this, Websocket.class);
             startActivity(intent);
 
-        } else if (id == R.id.nav_manage) {
+        } else if (id == R.id.nav_bluetooth) {
+            // Handle the web socket activity
+            Intent intent = new Intent(NavActivity.this, BluetoothLE.class);
+            startActivity(intent);
 
         } else if (id == R.id.nav_share) {
 

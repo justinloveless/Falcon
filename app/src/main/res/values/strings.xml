@@ -20,4 +20,7 @@
     <string name="disconnectButton">Disconnect</string>
     <string name="title_activity_websocket">Websocket</string>
     <string name="title_activity_bluetooth_le">BluetoothLE</string>
+
+    <string name="ble_not_supported">Bluetooth Low Energy is not supported on this device,
+        and as such will not work with the glove controls</string>
 </resources>
