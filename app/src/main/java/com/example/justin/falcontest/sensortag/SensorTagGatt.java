@@ -1,4 +1,4 @@
-package com.example.justin.falcontest;
+package com.example.justin.falcontest.sensortag;
 
 /**************************************************************************************************
 Filename:       SensorTagGatt.java

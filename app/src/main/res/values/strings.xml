@@ -23,4 +23,5 @@
 
     <string name="ble_not_supported">Bluetooth Low Energy is not supported on this device,
         and as such will not work with the glove controls</string>
+    <string name="title_activity_socket">Socket</string>
 </resources>

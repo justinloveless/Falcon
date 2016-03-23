@@ -10,6 +10,9 @@
             android:title="Websocket Chat" />
         <item android:id="@+id/nav_bluetooth" android:icon="@android:drawable/ic_menu_compass"
             android:title="Bluetooth LE" />
+        <item android:id="@+id/nav_socket" android:icon="@android:drawable/ic_menu_search"
+            android:title="Socket Client" />
+
     </group>
 
     <item android:title="Communicate">

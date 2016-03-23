@@ -203,7 +203,7 @@ public class BluetoothLE extends AppCompatActivity
         return super.onOptionsItemSelected(item);
     }
 
-    @SuppressWarnings("StatementWithEmptyBody")
+
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
@@ -432,6 +432,7 @@ public class BluetoothLE extends AppCompatActivity
             ServiceAdapter.notifyDataSetChanged();
             //redraw listview
             serviceList.invalidateViews();
+            services.get(1).getIncludedServices();
             gatt.readCharacteristic(services.get(1).getCharacteristics().get
                     (0));
             sArray.add(mGatt.toString());
