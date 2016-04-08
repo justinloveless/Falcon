@@ -3,8 +3,11 @@ package com.example.justin.falcontest;
 import android.Manifest;
 import android.annotation.TargetApi;
 import android.app.AlertDialog;
+import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothClass;
 import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanFilter;
@@ -12,12 +15,18 @@ import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.hardware.Sensor;
 import android.location.LocationManager;
+import android.os.Binder;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
+import android.os.Looper;
 import android.provider.Settings;
+import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.view.View;
@@ -59,12 +68,18 @@ import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.widget.Toast;
 
+//import com.example.justin.falcontest.common.BluetoothLeService;
+
+import java.security.Provider;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import java.util.List;
+import java.util.UUID;
 
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+//public class BluetoothLE extends AppCompatActivity
 public class BluetoothLE extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -72,7 +87,7 @@ public class BluetoothLE extends AppCompatActivity
     private BluetoothAdapter mBluetoothAdapter;
     private int REQUEST_ENABLE_BT = 1;
     private Handler mHandler;
-    private static final long SCAN_PERIOD = 10000; //10 seconds
+    private static final long SCAN_PERIOD = 5000; //5 seconds
     private BluetoothLeScanner mLEScanner;
     private List<ScanFilter> filters;
     private BluetoothGatt mGatt;
@@ -83,8 +98,14 @@ public class BluetoothLE extends AppCompatActivity
     public ArrayList<String> sArray = new ArrayList<String>();
     public ArrayAdapter ServiceAdapter;
     public TextView deviceName;
+    public TextView description;
     public Button scan;
     public String devName;
+    private BluetoothGatt mBluetoothGatt;
+    private ArrayList<ArrayList<BluetoothGattCharacteristic>> mGattCharacteristics =
+            new ArrayList<ArrayList<BluetoothGattCharacteristic>>();
+    public List<BluetoothGattService> mServices;
+    public BluetoothManager bluetoothManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -118,6 +139,7 @@ public class BluetoothLE extends AppCompatActivity
                 sArray.clear();
                 ServiceAdapter.notifyDataSetChanged();
                 serviceList.invalidateViews();
+                //start scannin for devices:
                 scanLeDevice(true);
             }
         });
@@ -135,14 +157,16 @@ public class BluetoothLE extends AppCompatActivity
 
 
         //***********Bluetooth stuff**************//
+        //check if BLE is supported
         mHandler = new Handler();
         if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)){
             Toast.makeText(this, "BLE not supported", Toast.LENGTH_SHORT).show();
             finish();
         }
-        final BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
+        /*final BluetoothManager */bluetoothManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
         mBluetoothAdapter = bluetoothManager.getAdapter();
 
+        //enable Bluetooth
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     // Android M Permission check 
             if (this.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -161,14 +185,16 @@ public class BluetoothLE extends AppCompatActivity
             }
         }
 
-        //turn on location services if they aren't already
-        //  (BLE scan won't work without GPS on for some arcane reason)
+        // turn on location services if they aren't already (forcefully, muahaha)
+        //  (BLE scan won't work without GPS on)
         final LocationManager manager = (LocationManager) getSystemService( Context.LOCATION_SERVICE );
         if ( !manager.isProviderEnabled( LocationManager.GPS_PROVIDER ) ) {
             Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
             startActivity(intent);
         }
 
+
+        description = (TextView)findViewById(R.id.textView2);
     }
 
     @Override
@@ -295,6 +321,7 @@ public class BluetoothLE extends AppCompatActivity
         }
     }
 
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_ENABLE_BT) {
@@ -310,6 +337,7 @@ public class BluetoothLE extends AppCompatActivity
     private void scanLeDevice(final boolean enable) {
         Log.d("scanLeDevice", "In Function");
         if (enable) {
+            //turn scan off after a predetermined time
             mHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
@@ -319,6 +347,7 @@ public class BluetoothLE extends AppCompatActivity
                         mLEScanner.stopScan(mScanCallback);
 
                     }
+                    Log.d("scanLeDevice", "Scan stopped");
                 }
             }, SCAN_PERIOD);
             if (Build.VERSION.SDK_INT < 21) {
@@ -336,7 +365,10 @@ public class BluetoothLE extends AppCompatActivity
         }
     }
 
+    //return scan results back to the app
     private ScanCallback mScanCallback = new ScanCallback() {
+
+
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
             Log.i("callbackType", String.valueOf(callbackType));
@@ -356,9 +388,15 @@ public class BluetoothLE extends AppCompatActivity
             else {
                 devName = "null";
             }
+
             Log.i("device Name", devName);
 
-            connectToDevice(btDevice);
+            //connect to CC2650 SensorTag
+            if (devName.matches("CC2650 SensorTag")) {
+                Log.d("connecting", "Connecting to device: "+ devName);
+                connectToDevice(result.getDevice());
+            }
+
         }
 
         @Override
@@ -390,21 +428,37 @@ public class BluetoothLE extends AppCompatActivity
             };
 
     public void connectToDevice(BluetoothDevice device) {
+        Log.d("connectToDevice", "Connecting to device " + device.getName());
         if (mGatt == null) {
             mGatt = device.connectGatt(this, false, gattCallback);
             scanLeDevice(false);// will stop after first device detection
-            try {
-                deviceName.setText(device.getName().toString());
-            } catch (Exception e) {
-                Log.e("ConnectToDevice", "Unable to set name. Device: " + device.toString()
-                        + "\nName: " + device.getName()
-                        + "\nError: " + e.getMessage() + " at line " + e.getStackTrace()[2].getLineNumber());
-
-            }
+//            try {
+//                deviceName.setText(device.getName());
+//                deviceName.setText(devName);
+//            } catch (Exception e) {
+//                Log.e("ConnectToDevice", "Unable to set name. Device: " + device.toString()
+//                        + "\nName: " + device.getName()
+//                        + "\nError: " + e.getMessage() + " at line " + e.getStackTrace()[2].getLineNumber());
+//                e.printStackTrace();
+//            }
         }
     }
 
     private final BluetoothGattCallback gattCallback = new BluetoothGattCallback() {
+        private int mReadWriteState = 0;
+        private void advanceRW(){mReadWriteState++;}
+        private void resetRWState() {mReadWriteState = 0;}
+        public int readState = 0;
+        public double g_x=0;
+        public double g_y=0;
+        public double g_z=0;
+        public double a_x =0;
+        public double a_y=0;
+        public double a_z=0;
+        public double m_x = 0;
+        public double m_y = 0;
+        public double m_z = 0;
+
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             Log.i("onConnectionStateChange", "Status: " + status);
@@ -421,32 +475,167 @@ public class BluetoothLE extends AppCompatActivity
             }
 
         }
-
+        @Override
+        public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic){
+            String uuidVal = characteristic.getUuid().toString();
+//            Log.i("Notice"," "+SensorTagGatt.lookup(uuidVal, "notFound")+" = "+ uuidVal);
+            byte[] val = characteristic.getValue();
+            g_x = ((val[1]<<8) + val[0]) / 128.0;
+            g_y = ((val[3]<<8) + val[2]) / 128.0;
+            g_z = ((val[5]<<8) + val[4]) / 128.0;
+            a_x = (((val[7]<<8) + val[6])/( 32768.0 / 2.0)) * -1;
+            a_y = ((val[9]<<8) + val[8]) / (32768.0 / 2.0);
+            a_z = (((val[11]<<8) + val[10]) / (32768.0 / 2.0)) * -1;
+            m_x = 1.0 * ((val[13]<<8) + val[12])/* / (32768 / 4912)*/;
+            m_y = 1.0 * ((val[15]<<8) + val[14]) /*/ (32768 / 4912)*/;
+            m_z = 1.0 * ((val[17]<<8) + val[16])/* / (32768 / 4912)*/;
+            Log.i("Notice", "\tGyr: \t" + g_x + "\t" + g_y + "\t" + g_z
+                    + "\tAcc: \t" + a_x + "\t" + a_y + "\t" + a_z
+                    + "\tMag: \t" + m_x + "\t" + m_y + "\t" + m_z);
+        }
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             List<BluetoothGattService> services = gatt.getServices();
+            mServices = services;
             Log.i("onServicesDiscovered", services.toString());
+            Log.i("onServicesDiscovered", services.get(0).toString());
             //add services to array
             sArray.add(services.toString());
-            //update content
-            ServiceAdapter.notifyDataSetChanged();
-            //redraw listview
-            serviceList.invalidateViews();
-            services.get(1).getIncludedServices();
-            gatt.readCharacteristic(services.get(1).getCharacteristics().get
-                    (0));
-            sArray.add(mGatt.toString());
-            ServiceAdapter.notifyDataSetChanged();
-            serviceList.invalidateViews();
+            services.get(0).getIncludedServices();
+                for (int j = 0; j < services.get(6).getCharacteristics().size(); j++) {
+                    final BluetoothGattCharacteristic c = services.get(6).getCharacteristics().get(j);
+                    UUID chara_s = c.getUuid();
+                    Log.i("characteristicDiscovery", "["+6+"]["+j+"] "+chara_s.toString()
+                            +" " + SensorTagGatt.lookup(chara_s.toString(), "notFound"));
 
+                    for (int k = 0; k < services.get(6).getCharacteristics().get(j).getDescriptors().size(); k++){
+                        final BluetoothGattDescriptor d = services.get(6).getCharacteristics().get(j).getDescriptors().get(k);
+                        UUID desc = d.getUuid();
+                        Log.i("DescriptorDiscovery", "["+6+"]["+j+"]["+k+"]"+desc.toString());
+                        if (desc.toString().contains("2902")){
+                            Log.i("ConfigDescriptor", " Conf for: " + SensorTagGatt.lookup(chara_s.toString(), "notFound"));
+                        }
+
+                    }
+                }
+//            BluetoothGattService s = services.get(6);
+//            BluetoothGattCharacteristic c = s.getCharacteristics().get(1);
+//            byte[] val = new byte[1];
+//            val[0] = 0x7f;
+//            c.setValue(val);
+//            Log.d("writing", "" + gatt.writeCharacteristic(c));
+            resetRWState();
+            SensorTagCommunication();
+        }
+
+
+        public void SensorTagCommunication(){
+            String TAG = "SensorTagComms";
+            BluetoothGattService mSvc = mServices.get(6);
+//            Log.d(TAG, "BT Gatt Svc = " + mSvc.toString());
+            Log.d(TAG, "state: " + mReadWriteState);
+            BluetoothGattCharacteristic mCh;
+            BluetoothGattDescriptor mDes;
+            switch(mReadWriteState){
+                case 0: //write motion configuration
+                    mCh = mSvc.getCharacteristic(
+                            UUID.fromString("f000aa82-0451-4000-b000-000000000000"));
+                    Log.d(TAG, "BT Gatt Char = " + mCh.toString());
+                    mCh.setValue(new byte[]{0x7f,0b01000000});
+                    Log.d(TAG, "" + mGatt.writeCharacteristic(mCh));
+                    break;
+                case 1: //write motion notification descriptor
+                    mCh = mSvc.getCharacteristic(
+                            UUID.fromString("f000aa81-0451-4000-b000-000000000000"));
+                    mDes = mCh.getDescriptors().get(0);
+                    mDes.setValue(new byte[] {0x01, 0x00}); //enable remotely
+                    mGatt.setCharacteristicNotification(mCh, true); // enable locally
+                    Log.d(TAG, "" + mGatt.writeDescriptor(mDes));
+                    break;
+                case 2: //write Period
+                    mCh = mSvc.getCharacteristic(UUID.fromString("f000aa83-0451-4000-b000-000000000000"));
+                    mCh.setValue(new byte[] {0x0a});
+                    Log.d(TAG, "" + mGatt.writeCharacteristic(mCh));
+                    break;
+                case 3: //read data
+                    mCh = mSvc.getCharacteristic(UUID.fromString("f000aa81-0451-4000-b000-000000000000"));
+                    Log.d(TAG, "" + mGatt.readCharacteristic(mCh));
+                    advanceRW();
+                    break;
+                case 4: //empty state
+                    break;
+                default:
+                    resetRWState();//go to initial state
+                    break;
+            }
         }
 
         @Override
-        public void onCharacteristicRead(BluetoothGatt gatt,
-                                         BluetoothGattCharacteristic
-                                                 characteristic, int status) {
-            Log.i("onCharacteristicRead", characteristic.toString());
-            gatt.disconnect();
+        public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+            byte[] val = characteristic.getValue();
+            char[] val_s = characteristic.getValue().toString().toCharArray();
+//            if (val.length >= 12) {
+//                if (readState == 0) {
+                    g_x = ((val[1]<<8) + val[0]) / 128.0;
+                    g_y = ((val[3]<<8) + val[2]) / 128.0;
+                    g_z = ((val[5]<<8) + val[4]) / 128.0;
+//                    readState++;
+//                } else if (readState == 1) {
+                    a_x = (((val[7]<<8) + val[6])/( 32768.0 / 2.0)) * -1;
+                    a_y = ((val[9]<<8) + val[8]) / (32768.0 / 2.0);
+                    a_z = (((val[11]<<8) + val[10]) / (32768.0 / 2.0)) * -1;
+//                    readState++;
+//                } else if (readState == 2){
+                    //magnetometer conversion is done on chip, so no calculation should be needed
+                    m_x = 1.0 * ((val[13]<<8) + val[12])/* / (32768 / 4912)*/;
+                    m_y = 1.0 * ((val[15]<<8) + val[14]) /*/ (32768 / 4912)*/;
+                    m_z = 1.0 * ((val[17]<<8) + val[16])/* / (32768 / 4912)*/;
+                    Log.i("value", "\tGyr: \t" + g_x + "\t,\t" + g_y + "\t,\t" + g_z
+                            + "\tAcc: \t" + a_x + "\t,\t" + a_y + "\t,\t" + a_z
+                            + "\tMag: \t" + m_x + "\t,\t" + m_y + "\t,\t" + m_z);
+//                    readState = 0;
+//                }
+//            }
+//            Log.d("value", " " /*+ val[17]+" " + val[16]+" " + val[15] +" " + val[14] +" " + val [13] +" " + val[12] +" " + val[11]
+//                    +" " + val[10] +" " + val[9] +" " + val[8]+" " + val[7] +" " + val[6] +" " + val[5] +" " + val[4] +" " + val[3]
+//                    +" " + val[2] +" " + val[1]*/
+//                    + "  \t" + g_x + " "+ g_y + " "+ g_z
+//                    + "  \t" + a_x + " "+ a_y + " "+ a_z
+//                    + "  \t" + m_x + " "+ m_y + " "+ m_z);
+            characteristic = characteristic.getService()
+                    .getCharacteristic(UUID.fromString("f000aa81-0451-4000-b000-000000000000"));
+            characteristic.getProperties();
+            //TODO uncomment this line to repeatedly read Movement Sensor
+//            mGatt.readCharacteristic(characteristic);
+//            SensorTagCommunication();
+        }
+
+
+
+
+        @Override
+        public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
+            Log.i("onDescriptorWrite", "descriptor: " + descriptor + " written to");
+            advanceRW();
+            SensorTagCommunication();
+        }
+
+        @Override
+        public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
+            Log.d("onReadRemoteRssi", "Remote RSSI: " + rssi);
+        }
+        @Override
+        public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+            byte[] val = characteristic.getValue();
+            int i = val[0];
+            Log.i("onCharacteristicWrite", "i=" + i);
+            Log.i("onCharacteristicWrite", "characteristic: " + characteristic.getValue() + " written to");
+            advanceRW();
+            SensorTagCommunication();
+        }
+        @Override
+        public void onReliableWriteCompleted(BluetoothGatt gatt, int status) {
+            Log.i("onReliableWrite", " well, that just happened... ");
         }
     };
 
@@ -489,7 +678,45 @@ public class BluetoothLE extends AppCompatActivity
         return false;
     }
 
+    private void displayGattServices(List<BluetoothGattService> gattServices){
+        if(gattServices == null) return;
+        String uuid = null;
+        String unknownServiceString = getResources().getString(R.string.unknown_service);
+        String unknownCharaString = getResources().getString(R.string.unknown_characteristic);
+        ArrayList<HashMap<String, String>> gattServiceData = new ArrayList<HashMap<String, String>>();
+        ArrayList<ArrayList<HashMap<String, String>>> gattCharacteristicData
+                = new ArrayList<ArrayList<HashMap<String, String>>>();
+
+        for (BluetoothGattService gattService : gattServices){
+            HashMap<String, String> currentServiceData = new HashMap<String, String>();
+            uuid = gattService.getUuid().toString();
+            currentServiceData.put("NAME", SensorTagGatt.lookup(uuid, unknownServiceString));
+            currentServiceData.put("UUID", uuid);
+            gattServiceData.add(currentServiceData);
+
+            ArrayList<HashMap<String, String>> gattCharacteristicGroupData =
+                    new ArrayList<HashMap<String, String>>();
+            List<BluetoothGattCharacteristic> gattCharacteristics =
+                    gattService.getCharacteristics();
+            ArrayList<BluetoothGattCharacteristic> charas =
+                    new ArrayList<BluetoothGattCharacteristic>();
+
+            // Loops through available Characteristics.
+            for (BluetoothGattCharacteristic gattCharacteristic : gattCharacteristics) {
+                charas.add(gattCharacteristic);
+                HashMap<String, String> currentCharaData = new HashMap<String, String>();
+                uuid = gattCharacteristic.getUuid().toString();
+                currentCharaData.put(
+                        "NAME", SensorTagGatt.lookup(uuid, unknownCharaString));
+                currentCharaData.put("UUID", uuid);
+                gattCharacteristicGroupData.add(currentCharaData);
+            }
+            mGattCharacteristics.add(charas);
+            gattCharacteristicData.add(gattCharacteristicGroupData);
+        }
+
+
+    }
 
 
 }
-

@@ -1,8 +1,11 @@
 package com.example.justin.falcontest;
 
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -23,15 +26,22 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import android.os.AsyncTask;
 
 public class SocketClient extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
+
+    SharedPreferences settings_prefs;
+    String IpAddress;
+    String port;
     TextView textResponse;
     EditText editTextAddress, editTextPort, editData;
-    Button buttonConnect, buttonClear;
+    Button buttonConnect, buttonClear, buttonSend, buttonClose;
     String data;
+    Socket socket = null;
 
 
 
@@ -48,7 +58,18 @@ public class SocketClient extends AppCompatActivity
         editData = (EditText) findViewById(R.id.dataSocket);
         buttonConnect = (Button)findViewById(R.id.connectSocket);
         buttonClear = (Button)findViewById(R.id.clearSocket);
+        buttonSend = (Button)findViewById(R.id.sendSocket);
+        buttonClose = (Button)findViewById(R.id.closeSocket);
         textResponse = (TextView)findViewById(R.id.responseSocket);
+
+        settings_prefs = getSharedPreferences("SETTINGS", 0);
+        IpAddress = settings_prefs.getString("IP", "xxx.xxx.xxx.xxx");
+        final SharedPreferences.Editor  edit_ip = settings_prefs.edit();
+        port = settings_prefs.getString("PORT", "8888");
+        final SharedPreferences.Editor edit_port = settings_prefs.edit();
+        editTextAddress.setText(IpAddress);
+        editTextPort.setText(port);
+
 
         buttonConnect.setOnClickListener(buttonConnectOnClickListener);
         buttonConnect.setOnClickListener( new View.OnClickListener(){
@@ -58,7 +79,17 @@ public class SocketClient extends AppCompatActivity
                         editTextAddress.getText().toString(),
                         Integer.parseInt(editTextPort.getText().toString()),
                         editData.getText().toString());
-                myClientTask.execute();
+                if (myClientTask.getStatus() == AsyncTask.Status.RUNNING){
+                    myClientTask.cancel(true);
+                }
+                else {
+                    myClientTask.execute();
+                }
+
+//                MyClientTaskRepeated();
+
+                edit_port.putString("PORT", editTextPort.getText().toString()).commit();
+                edit_ip.putString("IP", editTextAddress.getText().toString()).commit();
             }
         });
 
@@ -68,6 +99,22 @@ public class SocketClient extends AppCompatActivity
             public void onClick(View v) {
                 textResponse.setText("");
             }});
+
+        buttonSend.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick (View v) {
+
+            }
+        });
+
+        buttonClose.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick (View v){
+
+            }
+        });
 
 
 
@@ -100,9 +147,13 @@ public class SocketClient extends AppCompatActivity
                     Integer.parseInt(editTextPort.getText().toString()),
                     editData.getText().toString());
             myClientTask.execute();
+
+//            MyClientTaskRepeated();
         }
     };
-
+    public String getDataToSend(){
+        return editData.getText().toString();
+    }
     public class MyClientTask extends AsyncTask<Void, Void, Void> {
 
         String dstAddress;
@@ -113,6 +164,7 @@ public class SocketClient extends AppCompatActivity
         MyClientTask(String addr, int port, String msg) {
             dstAddress = addr;
             dstPort = port;
+//            dataToSend = msg;
             dataToSend = msg;
         }
 
@@ -124,14 +176,19 @@ public class SocketClient extends AppCompatActivity
             try {
                 // Socket Code!!!
                 socket = new Socket(dstAddress, dstPort);
-
-                OutputStream toServer = socket.getOutputStream();
-                DataOutputStream out = new DataOutputStream(toServer);
-//                out.writeUTF("Hello from " + socket.getLocalSocketAddress());
-                out.writeUTF(dataToSend);
-                InputStream fromServer = socket.getInputStream();
-                DataInputStream in = new DataInputStream(fromServer);
-                response = in.readUTF();
+                //loop through this
+                while (dataToSend != "close") {
+                    Log.d("dataSent", dataToSend);
+                    OutputStream toServer = socket.getOutputStream();
+                    DataOutputStream out = new DataOutputStream(toServer);
+//                    out.writeUTF("Hello from " + socket.getLocalSocketAddress());
+                    out.writeUTF(dataToSend + "\n");
+                    Thread.sleep(1000);
+//                    InputStream fromServer = socket.getInputStream();
+//                    DataInputStream in = new DataInputStream(fromServer);
+//                    response = in.readUTF();
+                    dataToSend = getDataToSend();
+                }
 
                 socket.close();
 //                ByteArrayOutputStream byteArrayOutputStream =
@@ -159,16 +216,19 @@ public class SocketClient extends AppCompatActivity
                 // TODO Auto-generated catch block
                 e.printStackTrace();
                 response = "IOException: " + e.toString();
-            } finally {
-                if (socket != null) {
-                    try {
-                        socket.close();
-                    } catch (IOException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    }
-                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
+//            finally {
+//                if (socket != null) {
+//                    try {
+//                        socket.close();
+//                    } catch (IOException e) {
+//                        // TODO Auto-generated catch block
+//                        e.printStackTrace();
+//                    }
+//                }
+//            }
             return null;
         }
 
@@ -219,13 +279,31 @@ public class SocketClient extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_camara) {
-            // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
+        if (id == R.id.nav_webview) {
+            // Handle the webview activity
+            Intent intent = new Intent(SocketClient.this, Picam.class);
+            String IpAddr = "@string/IPAddress";
+            intent.putExtra("IP", IpAddr);
+            startActivity(intent);
 
-        } else if (id == R.id.nav_slideshow) {
+        } else if (id == R.id.nav_ipsettings) {
+            // Handle the ip settings activity
+            Intent intent = new Intent(SocketClient.this, MainActivity.class);
+            startActivity(intent);
 
-        } else if (id == R.id.nav_manage) {
+        } else if (id == R.id.nav_websocket) {
+            // Handle the web socket activity
+            Intent intent = new Intent(SocketClient.this, Websocket.class);
+            startActivity(intent);
+
+        } else if (id == R.id.nav_bluetooth) {
+            // Handle the web socket activity
+            Intent intent = new Intent(SocketClient.this, BluetoothLE.class);
+            startActivity(intent);
+
+        } else if (id == R.id.nav_home) {
+            Intent intent = new Intent(SocketClient.this, NavActivity.class);
+            startActivity(intent);
 
         } else if (id == R.id.nav_share) {
 
@@ -236,5 +314,23 @@ public class SocketClient extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    private void MyClientTaskRepeated() {
+        Timer timer = new Timer();
+        timer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                try {
+                    new MyClientTask(editTextAddress.getText().toString(),
+                            Integer.parseInt(editTextPort.getText().toString()),
+                            editData.getText().toString()
+                    ).execute();
+                }
+                catch (Exception e){
+
+                }
+            }
+        }, 0 , 1000);
     }
 }
