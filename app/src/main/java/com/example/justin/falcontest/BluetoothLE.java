@@ -165,7 +165,6 @@ public class BluetoothLE extends AppCompatActivity
         }
         /*final BluetoothManager */bluetoothManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
         mBluetoothAdapter = bluetoothManager.getAdapter();
-
         //enable Bluetooth
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     // Android M Permission check 
@@ -203,6 +202,9 @@ public class BluetoothLE extends AppCompatActivity
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
+            mGatt.disconnect();
+            mGatt.close();
+            mGatt = null;
             super.onBackPressed();
         }
     }
@@ -268,8 +270,6 @@ public class BluetoothLE extends AppCompatActivity
         return true;
     }
 
-
-
     @Override
     protected void onResume() {
         super.onResume();
@@ -313,6 +313,7 @@ public class BluetoothLE extends AppCompatActivity
                 return;
             }
             Log.d("onDestroy", "mGatt is not null");
+            mGatt.disconnect();
             mGatt.close();
             mGatt = null;
         }
@@ -442,6 +443,10 @@ public class BluetoothLE extends AppCompatActivity
 //                e.printStackTrace();
 //            }
         }
+//        else {
+//            Log.e("connecToDevice", "mGatt not null: " + mGatt.toString());
+//            scanLeDevice(false);
+//        }
     }
 
     private final BluetoothGattCallback gattCallback = new BluetoothGattCallback() {
@@ -458,6 +463,8 @@ public class BluetoothLE extends AppCompatActivity
         public double m_x = 0;
         public double m_y = 0;
         public double m_z = 0;
+        public boolean connParamWritten = false;
+        public long prevNot, curNot;
 
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
@@ -473,25 +480,50 @@ public class BluetoothLE extends AppCompatActivity
                 default:
                     Log.e("gattCallback", "STATE_OTHER");
             }
+            switch (status){
+                case 8:
+                    Log.e("gattCallback", "TIMEOUT");
+                    break;
+                default:
+                    break;
+            }
 
         }
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic){
-            String uuidVal = characteristic.getUuid().toString();
+//            String uuidVal = characteristic.getUuid().toString();
 //            Log.i("Notice"," "+SensorTagGatt.lookup(uuidVal, "notFound")+" = "+ uuidVal);
-            byte[] val = characteristic.getValue();
-            g_x = ((val[1]<<8) + val[0]) / 128.0;
-            g_y = ((val[3]<<8) + val[2]) / 128.0;
-            g_z = ((val[5]<<8) + val[4]) / 128.0;
-            a_x = (((val[7]<<8) + val[6])/( 32768.0 / 2.0)) * -1;
-            a_y = ((val[9]<<8) + val[8]) / (32768.0 / 2.0);
-            a_z = (((val[11]<<8) + val[10]) / (32768.0 / 2.0)) * -1;
-            m_x = 1.0 * ((val[13]<<8) + val[12])/* / (32768 / 4912)*/;
-            m_y = 1.0 * ((val[15]<<8) + val[14]) /*/ (32768 / 4912)*/;
-            m_z = 1.0 * ((val[17]<<8) + val[16])/* / (32768 / 4912)*/;
-            Log.i("Notice", "\tGyr: \t" + g_x + "\t" + g_y + "\t" + g_z
-                    + "\tAcc: \t" + a_x + "\t" + a_y + "\t" + a_z
-                    + "\tMag: \t" + m_x + "\t" + m_y + "\t" + m_z);
+//            if (characteristic.getUuid().toString().equals("f000aa82-0451-4000-b000-000000000000")) {
+            curNot = System.currentTimeMillis();
+            if (curNot - prevNot < 75){
+                Log.e("QuickNotice", "Notification happened too quickly");
+            }
+            prevNot = curNot;
+                byte[] val = characteristic.getValue();
+                g_x = ((val[1] << 8) + val[0]) / 128.0;
+                g_y = ((val[3] << 8) + val[2]) / 128.0;
+                g_z = ((val[5] << 8) + val[4]) / 128.0;
+                a_x = (((val[7] << 8) + val[6]) / (32768.0 / 8.0)) * -1;
+                a_y = ((val[9] << 8) + val[8]) / (32768.0 / 8.0);
+                a_z = (((val[11] << 8) + val[10]) / (32768.0 / 8.0)) * -1;
+                m_x = 1.0 * ((val[13] << 8) + val[12])/* / (32768 / 4912)*/;
+                m_y = 1.0 * ((val[15] << 8) + val[14]) /*/ (32768 / 4912)*/;
+                m_z = 1.0 * ((val[17] << 8) + val[16])/* / (32768 / 4912)*/;
+                Log.i("Notice", String.format("\tGyr: \t%.2f\t%.2f\t%.2f\tAcc: \t%.2f\t%.2f\t%.2f\tMag: \t%.2f\t%.2f\t%.2f"
+                        , g_x, g_y, g_z
+                        , a_x, a_y, a_z
+                        , m_x, m_y, m_z));
+
+//            }else if (characteristic.getUuid().toString().equals("f000ccc1-0451-4000-b000-000000000000")){
+//                connParamWritten = true;
+//            }
+
+//            if (gatt.getConnectionState(gatt.getDevice()) == BluetoothProfile.STATE_DISCONNECTED){
+//            if (bluetoothManager.getConnectionState(gatt.getDevice(), BluetoothProfile.GATT) == BluetoothProfile.STATE_DISCONNECTED){
+//                Log.e("gattCallback", "STATE_DISCONNECTED");
+//                connectToDevice(gatt.getDevice());
+//                Log.e("gattCallback", "reconnecting");
+//            }
         }
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
@@ -502,22 +534,26 @@ public class BluetoothLE extends AppCompatActivity
             //add services to array
             sArray.add(services.toString());
             services.get(0).getIncludedServices();
-                for (int j = 0; j < services.get(6).getCharacteristics().size(); j++) {
-                    final BluetoothGattCharacteristic c = services.get(6).getCharacteristics().get(j);
+            for (int i =0; i < services.size(); i++) {
+                UUID ser = services.get(i).getUuid();
+                Log.i("characteristicDiscovery", "[" + i + "]" + ser.toString());
+                for (int j = 0; j < services.get(i).getCharacteristics().size(); j++) {
+                    final BluetoothGattCharacteristic c = services.get(i).getCharacteristics().get(j);
                     UUID chara_s = c.getUuid();
-                    Log.i("characteristicDiscovery", "["+6+"]["+j+"] "+chara_s.toString()
-                            +" " + SensorTagGatt.lookup(chara_s.toString(), "notFound"));
+                    Log.i("characteristicDiscovery", "[" + i + "][" + j + "] " + chara_s.toString()
+                            + " " + SensorTagGatt.lookup(chara_s.toString(), "notFound"));
 
-                    for (int k = 0; k < services.get(6).getCharacteristics().get(j).getDescriptors().size(); k++){
-                        final BluetoothGattDescriptor d = services.get(6).getCharacteristics().get(j).getDescriptors().get(k);
+                    for (int k = 0; k < services.get(i).getCharacteristics().get(j).getDescriptors().size(); k++) {
+                        final BluetoothGattDescriptor d = services.get(i).getCharacteristics().get(j).getDescriptors().get(k);
                         UUID desc = d.getUuid();
-                        Log.i("DescriptorDiscovery", "["+6+"]["+j+"]["+k+"]"+desc.toString());
-                        if (desc.toString().contains("2902")){
+                        Log.i("DescriptorDiscovery", "[" + i + "][" + j + "][" + k + "]" + desc.toString());
+                        if (desc.toString().contains("2902")) {
                             Log.i("ConfigDescriptor", " Conf for: " + SensorTagGatt.lookup(chara_s.toString(), "notFound"));
                         }
 
                     }
                 }
+            }
 //            BluetoothGattService s = services.get(6);
 //            BluetoothGattCharacteristic c = s.getCharacteristics().get(1);
 //            byte[] val = new byte[1];
@@ -538,26 +574,67 @@ public class BluetoothLE extends AppCompatActivity
             BluetoothGattDescriptor mDes;
             switch(mReadWriteState){
                 case 0: //write motion configuration
+                    mSvc = mServices.get(6);
                     mCh = mSvc.getCharacteristic(
                             UUID.fromString("f000aa82-0451-4000-b000-000000000000"));
                     Log.d(TAG, "BT Gatt Char = " + mCh.toString());
-                    mCh.setValue(new byte[]{0x7f,0b01000000});
+                    mCh.setValue(new byte[]{0x7f, 0b00000100});
                     Log.d(TAG, "" + mGatt.writeCharacteristic(mCh));
                     break;
-                case 1: //write motion notification descriptor
+                case 1: //write Period
+                    mSvc = mServices.get(6);
+                    mCh = mSvc.getCharacteristic(UUID.fromString("f000aa83-0451-4000-b000-000000000000"));
+                    mCh.setValue(new byte[]{0x0a});
+                    Log.d(TAG, "" + mGatt.writeCharacteristic(mCh));
+                    break;
+                case 2: //write motion notification descriptor
+                    mSvc = mServices.get(6);
                     mCh = mSvc.getCharacteristic(
                             UUID.fromString("f000aa81-0451-4000-b000-000000000000"));
                     mDes = mCh.getDescriptors().get(0);
                     mDes.setValue(new byte[] {0x01, 0x00}); //enable remotely
                     mGatt.setCharacteristicNotification(mCh, true); // enable locally
                     Log.d(TAG, "" + mGatt.writeDescriptor(mDes));
+                    prevNot = System.currentTimeMillis();
                     break;
-                case 2: //write Period
-                    mCh = mSvc.getCharacteristic(UUID.fromString("f000aa83-0451-4000-b000-000000000000"));
-                    mCh.setValue(new byte[] {0x0a});
-                    Log.d(TAG, "" + mGatt.writeCharacteristic(mCh));
-                    break;
+//                case 101: //set up notifications on ccc1
+//                    mSvc = mServices.get(11);
+//                    mCh = mSvc.getCharacteristic(UUID.fromString("f000ccc1-0451-4000-b000-000000000000"));
+//                    mDes = mCh.getDescriptors().get(0);
+//                    mDes.setValue(new byte[] {0x01, 0x00}); //enable remotely
+//                    mGatt.setCharacteristicNotification(mCh, true); // enable locally
+//                    Log.d(TAG, "" + mGatt.writeDescriptor(mDes));
+//                    break;
+//                case 100: // write connection parameters
+//                    mSvc = mServices.get(11);
+//                    mCh = mSvc.getCharacteristic(UUID.fromString("f000ccc2-0451-4000-b000-000000000000"));
+//                    //TODO figure out connection parameters to get connection to be more steady
+//                    byte[] maxConInt = new byte[] {40,0};
+//                    byte[] minConInt = new byte[] {40,0};
+//                    byte[] slvLat = new byte[] {0,0};
+//                    byte[] supTO = new byte[] {0x7f,0x06};
+////                    byte[] tot = new byte[] {   supTO[1], supTO[0],slvLat[1], slvLat[0], minConInt[1],
+////                            minConInt[0],maxConInt[1], maxConInt[0]};
+//                    byte[] tot = new byte[] {maxConInt[0], maxConInt[1], minConInt[0],
+//                            minConInt[1], slvLat[0], slvLat[1], supTO[0], supTO[1]};
+//                    mCh.setValue(tot);
+//                    Log.d(TAG, "" + mGatt.writeCharacteristic(mCh));
+//                    break;
+//                case 102: // wait for notification from ccc1
+//                    //TODO wait until notification says that connection parameters have been written
+//                    if (connParamWritten){
+//                        advanceRW();
+//                    }
+//                    SensorTagCommunication();
+//                    break;
+//                case 105: //read connection parameters
+//                    mSvc = mServices.get(11);
+//                    mCh = mSvc.getCharacteristic(UUID.fromString("f000ccc1-0451-4000-b000-000000000000"));
+//                    Log.d(TAG, "" + mGatt.readCharacteristic(mCh));
+//                    advanceRW();
+//                    break;
                 case 3: //read data
+                    mSvc = mServices.get(6);
                     mCh = mSvc.getCharacteristic(UUID.fromString("f000aa81-0451-4000-b000-000000000000"));
                     Log.d(TAG, "" + mGatt.readCharacteristic(mCh));
                     advanceRW();
@@ -572,39 +649,32 @@ public class BluetoothLE extends AppCompatActivity
 
         @Override
         public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-            byte[] val = characteristic.getValue();
-            char[] val_s = characteristic.getValue().toString().toCharArray();
-//            if (val.length >= 12) {
-//                if (readState == 0) {
-                    g_x = ((val[1]<<8) + val[0]) / 128.0;
-                    g_y = ((val[3]<<8) + val[2]) / 128.0;
-                    g_z = ((val[5]<<8) + val[4]) / 128.0;
-//                    readState++;
-//                } else if (readState == 1) {
-                    a_x = (((val[7]<<8) + val[6])/( 32768.0 / 2.0)) * -1;
-                    a_y = ((val[9]<<8) + val[8]) / (32768.0 / 2.0);
-                    a_z = (((val[11]<<8) + val[10]) / (32768.0 / 2.0)) * -1;
-//                    readState++;
-//                } else if (readState == 2){
-                    //magnetometer conversion is done on chip, so no calculation should be needed
-                    m_x = 1.0 * ((val[13]<<8) + val[12])/* / (32768 / 4912)*/;
-                    m_y = 1.0 * ((val[15]<<8) + val[14]) /*/ (32768 / 4912)*/;
-                    m_z = 1.0 * ((val[17]<<8) + val[16])/* / (32768 / 4912)*/;
-                    Log.i("value", "\tGyr: \t" + g_x + "\t,\t" + g_y + "\t,\t" + g_z
-                            + "\tAcc: \t" + a_x + "\t,\t" + a_y + "\t,\t" + a_z
-                            + "\tMag: \t" + m_x + "\t,\t" + m_y + "\t,\t" + m_z);
-//                    readState = 0;
-//                }
-//            }
-//            Log.d("value", " " /*+ val[17]+" " + val[16]+" " + val[15] +" " + val[14] +" " + val [13] +" " + val[12] +" " + val[11]
-//                    +" " + val[10] +" " + val[9] +" " + val[8]+" " + val[7] +" " + val[6] +" " + val[5] +" " + val[4] +" " + val[3]
-//                    +" " + val[2] +" " + val[1]*/
-//                    + "  \t" + g_x + " "+ g_y + " "+ g_z
-//                    + "  \t" + a_x + " "+ a_y + " "+ a_z
-//                    + "  \t" + m_x + " "+ m_y + " "+ m_z);
-            characteristic = characteristic.getService()
-                    .getCharacteristic(UUID.fromString("f000aa81-0451-4000-b000-000000000000"));
-            characteristic.getProperties();
+            Log.d("CharRead", "reading Characteristic");
+            if (characteristic.getUuid().toString().equals("f000aa81-0451-4000-b000-000000000000") ) {
+                byte[] val = characteristic.getValue();
+                char[] val_s = characteristic.getValue().toString().toCharArray();
+                g_x = ((val[1] << 8) + val[0]) / 128.0;
+                g_y = ((val[3] << 8) + val[2]) / 128.0;
+                g_z = ((val[5] << 8) + val[4]) / 128.0;
+                a_x = (((val[7] << 8) + val[6]) / (32768.0 / 2.0)) * -1;
+                a_y = ((val[9] << 8) + val[8]) / (32768.0 / 2.0);
+                a_z = (((val[11] << 8) + val[10]) / (32768.0 / 2.0)) * -1;
+                //magnetometer conversion is done on chip, so no calculation should be needed
+                m_x = 1.0 * ((val[13] << 8) + val[12])/* / (32768 / 4912)*/;
+                m_y = 1.0 * ((val[15] << 8) + val[14]) /*/ (32768 / 4912)*/;
+                m_z = 1.0 * ((val[17] << 8) + val[16])/* / (32768 / 4912)*/;
+                Log.i("value", "\tGyr: \t" + g_x + "\t,\t" + g_y + "\t,\t" + g_z
+                        + "\tAcc: \t" + a_x + "\t,\t" + a_y + "\t,\t" + a_z
+                        + "\tMag: \t" + m_x + "\t,\t" + m_y + "\t,\t" + m_z);
+            }
+            else if (characteristic.getUuid().toString().equals("f000ccc1-0451-4000-b000-000000000000") ){
+                byte[] val = characteristic.getValue();
+                double cnctInt = 1.0*((val[1] << 8) + val[0]);
+                double slvLat = 1.0*((val[3] << 8) + val[2]);
+                double supTO = 1.0*((val[5] << 8) + val[4]);
+                Log.d("connectionParams","Connection Interval: " + cnctInt + " Slave Latency: "
+                        + slvLat + " Supervisor Timeout" + supTO);
+            }
             //TODO uncomment this line to repeatedly read Movement Sensor
 //            mGatt.readCharacteristic(characteristic);
 //            SensorTagCommunication();
@@ -628,8 +698,12 @@ public class BluetoothLE extends AppCompatActivity
         public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
             byte[] val = characteristic.getValue();
             int i = val[0];
-            Log.i("onCharacteristicWrite", "i=" + i);
-            Log.i("onCharacteristicWrite", "characteristic: " + characteristic.getValue() + " written to");
+            String sent = "";
+            for (int j = 0; j < val.length; j++){
+                sent += "[" + val[j] + "] ";
+            }
+//            Log.i("onCharacteristicWrite", "i=" + i);
+            Log.i("onCharacteristicWrite", "bytes written:" + val.length + " {"+sent +"} to " + characteristic.getUuid().toString());
             advanceRW();
             SensorTagCommunication();
         }

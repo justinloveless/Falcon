@@ -1,61 +1,126 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent"
-    android:layout_height="match_parent" android:paddingLeft="@dimen/activity_horizontal_margin"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     android:paddingBottom="@dimen/activity_vertical_margin"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:showIn="@layout/app_bar_socket" tools:context="com.example.justin.falcontest.SocketClient"
-    android:orientation="vertical"
-    >
+    tools:showIn="@layout/app_bar_socket"
+    tools:context="com.example.justin.falcontest.SocketClient"
+    android:orientation="horizontal"
+    android:background="#000000">
+
+    <!--<EditText-->
+        <!--android:id="@+id/addressSocket"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:hint="dstAddress"-->
+        <!--android:layout_alignParentTop="true"-->
+        <!--android:layout_alignParentStart="true" />-->
+    <!--<EditText-->
+        <!--android:id="@+id/portSocket"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:hint="dstPort"-->
+        <!--android:layout_alignParentTop="true"-->
+        <!--android:layout_centerHorizontal="true" />-->
+    <!--<EditText-->
+        <!--android:id="@+id/dataSocket"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:hint="input data by hand here..."-->
+        <!--android:layout_below="@+id/addressSocket"-->
+        <!--android:layout_alignParentStart="true" />-->
 
     <TextView
+        android:id="@+id/sensorData"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:autoLink="web"
-        android:text="http://android-er.blogspot.com/"
-        android:textStyle="bold" />
-    <EditText
-        android:id="@+id/addressSocket"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="dstAddress" />
-    <EditText
-        android:id="@+id/portSocket"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="dstPort" />
-    <EditText
-        android:id="@+id/dataSocket"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="data" />
-    <Button
-        android:id="@+id/connectSocket"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Connect..."/>
-    <Button
-        android:id="@+id/sendSocket"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Connect..."/>
-    <Button
-        android:id="@+id/clearSocket"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Clear"/>
+        android:text="sensorData"
+        android:layout_gravity="center_vertical"
+        android:textSize="16sp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
+        android:textColor="#ffffff" />
+
+    <!--<Button-->
+        <!--android:id="@+id/connectSocket"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:text="Connect"-->
+        <!--android:layout_below="@+id/dataSocket"-->
+        <!--android:layout_alignParentStart="true" />-->
+    <!--<Button-->
+        <!--android:id="@+id/sendSocket"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:text="Send"-->
+        <!--android:layout_alignTop="@+id/connectSocket"-->
+        <!--android:layout_toEndOf="@+id/connectSocket" />-->
+    <!--<Button-->
+        <!--android:id="@+id/clearSocket"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:text="Clear"-->
+        <!--android:layout_alignTop="@+id/sendSocket"-->
+        <!--android:layout_toStartOf="@+id/closeSocket" />-->
     <Button
         android:id="@+id/closeSocket"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Clear"/>
+        android:text="Stop"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true" />
     <TextView
         android:id="@+id/responseSocket"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/sensorData"
+        android:layout_alignParentStart="true"
+        android:layout_toStartOf="@+id/closeSocket"
+        android:textColor="#ffffff" />
 
-</LinearLayout>
+    <GridLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/closeSocket"
+        android:layout_alignParentEnd="true"
+        android:columnCount="2"
+        android:rowCount="1">
+
+        <ImageView
+            android:layout_width="300dp"
+            android:layout_height="200dp"
+            android:id="@+id/picam"
+            android:layout_alignParentStart="true"
+            android:layout_below="@+id/closeSocket"
+            android:layout_alignParentBottom="true"
+            android:contentDescription="piCam feed"
+            android:layout_toStartOf="@+id/closeSocket"
+            android:layout_gravity="left"
+            android:layout_marginRight="20dp"
+            android:layout_column="0"
+            android:layout_columnSpan="1"
+            android:background="#000000" />
+
+        <ImageView
+            android:layout_width="300dp"
+            android:layout_height="200dp"
+            android:id="@+id/piCam2"
+            android:contentDescription="piCam feed"
+            android:layout_marginLeft="20dp"
+            android:layout_below="@+id/closeSocket"
+            android:layout_alignParentEnd="true"
+            android:layout_column="1"
+            android:layout_columnSpan="1"
+            android:background="#000000" />
+    </GridLayout>
+
+</RelativeLayout>
