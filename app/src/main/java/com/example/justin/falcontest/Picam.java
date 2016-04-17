@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.WindowManager;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -18,15 +19,15 @@ public class Picam extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_picam);
-
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         Intent intent = getIntent();
         String message = intent.getStringExtra("IP");
         TextView debugText = (TextView) findViewById(R.id.PicamIntentText);
-        debugText.setText(message + "/picam");
+        debugText.setText(message + "/piviewer");
 
         //Shared variables
         mPrefs = getSharedPreferences("SETTINGS", 0);
-        IpAddress = "http://" + mPrefs.getString("IP", "") + "/picam"; //format as URL
+        IpAddress = "http://" + mPrefs.getString("IP", "") + "/piviewer"; //format as URL
 
         mWebView = (WebView) findViewById(R.id.activity_picam_webview);
         //Enable Javascript
@@ -37,4 +38,24 @@ public class Picam extends AppCompatActivity {
         mWebView.loadUrl(IpAddress);
 
     }
+
+    @Override
+    public void onDestroy(){
+        super.onDestroy();
+        mWebView.destroy();
+    }
+
+    @Override
+    public void onResume(){
+        mWebView.onResume();
+        super.onResume();
+    }
+
+    @Override
+    public void onPause(){
+        mWebView.onPause();
+        super.onPause();
+    }
+
+
 }

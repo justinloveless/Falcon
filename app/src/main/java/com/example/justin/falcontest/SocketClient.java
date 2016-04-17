@@ -32,6 +32,9 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.WindowManager;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -40,6 +43,7 @@ import android.widget.TextView;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.ConnectException;
 import java.net.Socket;
 import java.net.SocketAddress;
 import java.net.URL;
@@ -51,6 +55,8 @@ import java.util.TimerTask;
 import android.os.AsyncTask;
 import android.widget.Toast;
 
+import com.google.android.exoplayer.ExoPlaybackException;
+import com.google.android.gms.analytics.HitBuilders;
 import com.google.vrtoolkit.cardboard.CardboardView;
 
 public class SocketClient extends AppCompatActivity
@@ -63,6 +69,7 @@ public class SocketClient extends AppCompatActivity
     TextView sensorVals;
     ImageView picam1;
     ImageView picam2;
+    WebView mWebView;
 //    EditText editTextAddress, editTextPort, editData;
     Button /*buttonConnect, buttonClear, buttonSend, */buttonClose;
     String data;
@@ -78,7 +85,6 @@ public class SocketClient extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_socket);
-        CardboardView c;
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         decorView = getWindow().getDecorView();
 //        decorView.setOnSystemUiVisibilityChangeListener(
@@ -102,8 +108,10 @@ public class SocketClient extends AppCompatActivity
         buttonClose = (Button)findViewById(R.id.closeSocket);
         textResponse = (TextView)findViewById(R.id.responseSocket);
         sensorVals = (TextView)findViewById(R.id.sensorData);
-        picam1 = (ImageView)findViewById(R.id.picam);
-        picam2 = (ImageView)findViewById(R.id.piCam2);
+        mWebView = (WebView)findViewById(R.id.piviewer);
+
+//        picam1 = (ImageView)findViewById(R.id.picam);
+//        picam2 = (ImageView)findViewById(R.id.piCam2);
 
 
         settings_prefs = getSharedPreferences("SETTINGS", 0);
@@ -114,6 +122,13 @@ public class SocketClient extends AppCompatActivity
 //        editTextAddress.setText(IpAddress);
 //        editTextPort.setText(port);
 
+
+
+        //Enable Javascript
+        WebSettings ws = mWebView.getSettings();
+        ws.setJavaScriptEnabled(true);//force links and redirects to open in web view instead of browser
+        mWebView.setWebViewClient(new WebViewClient());
+        mWebView.loadUrl("http://" + IpAddress + "/piviewer");
 
 //        buttonConnect.setOnClickListener( new View.OnClickListener(){
 //            @Override
@@ -168,14 +183,14 @@ public class SocketClient extends AppCompatActivity
 
 
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
+//        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+//        fab.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+//                        .setAction("Action", null).show();
+//            }
+//        });
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -210,8 +225,46 @@ public class SocketClient extends AppCompatActivity
 
 //        new LoadImage().execute("http://www.tehcute.com/pics/201110/marshmellow-kitten-big.jpg");
 //        new SocketConnect(IpAddress, Integer.parseInt(editTextPort.getText().toString()));
-        LoadImageRepeatedly();
+//        LoadImageRepeatedly();
+        MyClientTaskRepeated();
 
+    }
+
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        //happens immediately after onCreate() or onRestart();
+
+    }
+    @Override
+    protected void onResume() {
+        super.onResume();
+        startup();
+    }
+
+    @Override
+    protected void onPause() {
+        cleanup();
+        super.onPause();
+    }
+
+    @Override
+    protected void onStop(){
+        cleanup();
+        super.onStop();
+    }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        startup();
+    }
+
+    @Override
+    protected void onDestroy(){
+        cleanup();
+        super.onDestroy();
     }
 
     @Override
@@ -227,62 +280,65 @@ public class SocketClient extends AppCompatActivity
                             | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);}
     }
 
-    public class LoadImage extends AsyncTask <String, Void, Bitmap>{
-        @Override
-        protected Bitmap doInBackground(String ... params) {
-            try {
-                InputStream is = (InputStream) new URL(params[0]).getContent();
-//                Drawable d = Drawable.createFromStream(is, null);
-                Bitmap orig = BitmapFactory.decodeStream(is);
-//                Bitmap targetL = Bitmap.createBitmap(1920, 1080, Bitmap.Config.ARGB_8888);
-//                Canvas canvas = new Canvas(targetL);
-//                RectF rectF = new RectF(0,0,1200,1080);
-//                Path path = new Path();
-//                path.addRect(rectF, Path.Direction.CW);
-//                canvas.clipPath(path);
-//                canvas.drawBitmap(orig, new Rect(0, 0, orig.getWidth(), orig.getHeight()),
-//                        new Rect(0, 0, targetL.getWidth(), targetL.getHeight()), new Paint());
-//                Matrix m = new Matrix();
-//                m.postScale(1f, 1f);
-//                Bitmap resized = Bitmap.createBitmap(targetL, 0,0,1500,1080, m, true);
-//                BitmapDrawable bd = new BitmapDrawable(orig);
-                return orig;
-            }catch (Exception e) {
-                return null;
-            }
-        }
-        @Override
-        protected void onPostExecute(Bitmap d){
-            if (d != null){
-                Bitmap targetL = Bitmap.createBitmap(1920, 1080, Bitmap.Config.ARGB_8888);
-                Bitmap targetR = Bitmap.createBitmap(1920, 1080, Bitmap.Config.ARGB_8888);
-                Canvas canvasL = new Canvas(targetL);
-                Canvas canvasR = new Canvas(targetR);
-                RectF rectFL = new RectF(0, 0, 1200, 1080);
-                RectF rectFR = new RectF(720, 0, 1920, 1080);
-                Path pathL = new Path();
-                Path pathR = new Path();
-                pathL.addRect(rectFL, Path.Direction.CW);
-                pathR.addRect(rectFR, Path.Direction.CW);
-                canvasL.clipPath(pathL);
-                canvasR.clipPath(pathR);
-                canvasL.drawBitmap(d, new Rect(0, 0, d.getWidth(), d.getHeight()),
-                        new Rect(0, 0, targetL.getWidth(), targetL.getHeight()), new Paint());
-                canvasR.drawBitmap(d, new Rect(0, 0, d.getWidth(), d.getHeight()),
-                        new Rect(0, 0, targetR.getWidth(), targetR.getHeight()), new Paint());
-                Matrix m = new Matrix();
-                m.postScale(1f,1f);
-                Bitmap resizedL = Bitmap.createBitmap(targetL, 0,0,1920,1080, m, true);
-                Bitmap resizedR = Bitmap.createBitmap(targetR, 0,0,1920,1080, m, true);
-                BitmapDrawable bdL = new BitmapDrawable(resizedL);
-                BitmapDrawable bdR = new BitmapDrawable(resizedR);
-                picam1.setImageDrawable(bdL);
-                picam2.setImageDrawable(bdR);
-            } else {
-                Toast.makeText(SocketClient.this, "Image doesn't exist, or network error", Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
+//    public class LoadImage extends AsyncTask <String, Void, Bitmap>{
+//        @Override
+//        protected Bitmap doInBackground(String ... params) {
+//            try {
+//                InputStream is = (InputStream) new URL(params[0]).getContent();
+////                Drawable d = Drawable.createFromStream(is, null);
+//                Bitmap orig = BitmapFactory.decodeStream(is);
+////                Bitmap targetL = Bitmap.createBitmap(1920, 1080, Bitmap.Config.ARGB_8888);
+////                Canvas canvas = new Canvas(targetL);
+////                RectF rectF = new RectF(0,0,1200,1080);
+////                Path path = new Path();
+////                path.addRect(rectF, Path.Direction.CW);
+////                canvas.clipPath(path);
+////                canvas.drawBitmap(orig, new Rect(0, 0, orig.getWidth(), orig.getHeight()),
+////                        new Rect(0, 0, targetL.getWidth(), targetL.getHeight()), new Paint());
+////                Matrix m = new Matrix();
+////                m.postScale(1f, 1f);
+////                Bitmap resized = Bitmap.createBitmap(targetL, 0,0,1500,1080, m, true);
+////                BitmapDrawable bd = new BitmapDrawable(orig);
+//                return orig;
+//            }catch (Exception e) {
+//                return null;
+//            }
+//        }
+//        @Override
+//        protected void onPostExecute(Bitmap d){
+//            if (d != null){
+////                Bitmap targetL = Bitmap.createBitmap(1920, 1080, Bitmap.Config.ARGB_8888);
+////                Bitmap targetR = Bitmap.createBitmap(1920, 1080, Bitmap.Config.ARGB_8888);
+////                Canvas canvasL = new Canvas(targetL);
+////                Canvas canvasR = new Canvas(targetR);
+////                RectF rectFL = new RectF(0, 0, 1200, 1080);
+////                RectF rectFR = new RectF(720, 0, 1920, 1080);
+////                Path pathL = new Path();
+////                Path pathR = new Path();
+////                pathL.addRect(rectFL, Path.Direction.CW);
+////                pathR.addRect(rectFR, Path.Direction.CW);
+////                canvasL.clipPath(pathL);
+////                canvasR.clipPath(pathR);
+////                canvasL.drawBitmap(d, new Rect(0, 0, d.getWidth(), d.getHeight()),
+////                        new Rect(0, 0, targetL.getWidth(), targetL.getHeight()), new Paint());
+////                canvasR.drawBitmap(d, new Rect(0, 0, d.getWidth(), d.getHeight()),
+////                        new Rect(0, 0, targetR.getWidth(), targetR.getHeight()), new Paint());
+////                Matrix m = new Matrix();
+////                m.postScale(1f,1f);
+////                Bitmap resizedL = Bitmap.createBitmap(targetL, 0,0,1920,1080, m, true);
+////                Bitmap resizedR = Bitmap.createBitmap(targetR, 0,0,1920,1080, m, true);
+////                BitmapDrawable bdL = new BitmapDrawable(resizedL);
+////                BitmapDrawable bdR = new BitmapDrawable(resizedR);
+////                picam1.setImageDrawable(bdL);
+////                picam2.setImageDrawable(bdR);
+//                BitmapDrawable bd = new BitmapDrawable(d);
+//                picam1.setImageDrawable(bd);
+//                picam2.setImageDrawable(bd);
+//            } else {
+//                Toast.makeText(SocketClient.this, "Image doesn't exist, or network error", Toast.LENGTH_SHORT).show();
+//            }
+//        }
+//    }
 
 //    View.OnClickListener buttonConnectOnClickListener = new View.OnClickListener(){
 //
@@ -310,13 +366,13 @@ public class SocketClient extends AppCompatActivity
     float[] gravity = new float[3];
     float[] geomag = new float[3];
     float[] orientVals = new float[3];
-    private static final double dPitchMin = 1400;//drone pitch
-    private static final double dPitchMax = 1700;
-    private static final double dThrottleMin = 1200; //drone throttle
-    private static final double dThrottleMax = 1600;
+    private static final double dPitchMin = 1300;//drone pitch
+    private static final double dPitchMax = 1600;
+    private static final double dThrottleMin = 1250; //drone throttle
+    private static final double dThrottleMax = 1900;
     private static final double dThrottleNom = (dThrottleMax - dThrottleMin)/2 + dThrottleMin;
-    private static final double pitchMin = -45; // pitch from phone controls drone pitch AND drone throttle
-    private static final double pitchMax = 45;
+    private static final double pitchMin = -30; // pitch from phone controls drone pitch AND drone throttle
+    private static final double pitchMax = 30;
     private static final double dRollMin = 1400; //drone roll
     private static final double dRollMax = 1700;
     private static final double rollMin = 45;
@@ -466,9 +522,19 @@ public class SocketClient extends AppCompatActivity
                 dataToSend = getDataToSend();
 //                while (dataToSend != "close") {
                 if (socket == null || socket.isClosed()) {
-                    socket = new Socket(dstAddress,dstPort); //make new socket if first pass
+                    try {
+                        socket = new Socket(dstAddress, dstPort); //make new socket if first pass
+                    } catch (ConnectException e){
+                        e.printStackTrace();
+                        runOnUiThread(new Runnable(){
+                            public void run(){
+                                Toast.makeText(getApplicationContext(), "Cool your jets!\nFalcon is not ready", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+
+                    }
                 }
-                if (!socket.isConnected()){
+                else if (!socket.isConnected()){
                     socket.connect(sockAddr); // reconnect if connection is lost
                 } else {
                     Log.d("myClientTask", "Socket=" + (s == null ? "null" : ("" + s.toString())));
@@ -628,88 +694,124 @@ public class SocketClient extends AppCompatActivity
         return true;
     }
 
-//    private void MyClientTaskRepeated() {
-//        Timer timer = new Timer();
-//        timer.scheduleAtFixedRate(new TimerTask() {
-//            @Override
-//            public void run() {
-//                try {
-//                    new MyClientTask(editTextAddress.getText().toString(),
-//                            Integer.parseInt(editTextPort.getText().toString()),
-//                            editData.getText().toString(),
-//                            socket
-//                    ).execute();
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//        }, 0, 100);
-//    }
-
-    private void LoadImageRepeatedly() {
-        Timer t = new Timer();
+    private void MyClientTaskRepeated() {
+        Timer timer = new Timer();
         if (stop == true){
-            t.cancel();
+            timer.cancel();
         } else {
-            t.scheduleAtFixedRate(new TimerTask() {
-                //            String x = "", y = "";
-//            int i = 0, j = 0;
+            timer.scheduleAtFixedRate(new TimerTask() {
                 @Override
                 public void run() {
-                    if (stop == true){
-                        new LoadImage()
-                                .execute("https://s-media-cache-ak0.pinimg.com/736x/a2/57/90/a2579035dbf671b787a302aa816477a3.jpg");
+                    if (stop == true) {
+//                        mWebView.loadUrl("https://s-media-cache-ak0.pinimg.com/736x/a2/57/90/a2579035dbf671b787a302aa816477a3.jpg");
                         this.cancel();
                     } else {
-//                        x = "" + (300 + i++%7);
-//                        y = "" + (200 + j++%13);
-//
-//                        new LoadImage().execute("https://unsplash.it/"+x+"/"+y);
-//                        Log.d("image", "http://" + IpAddress + "/picam/cam.jpg");
                         try {
-                            new LoadImage().execute("http://" + IpAddress + "/picam/cam.jpg");
                             MyClientTask myClientTask = new MyClientTask(IpAddress,
                                     Integer.parseInt(port),
                                     getDataToSend(),
-                                    socket
-                            );
+                                    socket);
                             if (myClientTask.getStatus() == AsyncTask.Status.RUNNING) {
                                 myClientTask.cancel(true);
-                                Log.d("Timer", "myClientTask is Running, has been cancelled");
                             } else {
                                 myClientTask.execute();
-                                Log.d("Timer", "myClientTask has been executed");
                             }
-
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
-
-//                        if (myClientTask.getStatus() == AsyncTask.Status.RUNNING){
-//                            myClientTask.cancel(true);
-//                        }
-//                        else {
-//                            myClientTask.execute();
-//                        }
                     }
                 }
-            }, 0, 105);
+            }, 0, 100);
         }
     }
+
+
+
+//    private void LoadImageRepeatedly() {
+//        Timer t = new Timer();
+//        if (stop == true){
+//            t.cancel();
+//        } else {
+//            t.scheduleAtFixedRate(new TimerTask() {
+//                //            String x = "", y = "";
+////            int i = 0, j = 0;
+//                @Override
+//                public void run() {
+//                    if (stop == true){
+//                        new LoadImage()
+//                                .execute("https://s-media-cache-ak0.pinimg.com/736x/a2/57/90/a2579035dbf671b787a302aa816477a3.jpg");
+//                        this.cancel();
+//                    } else {
+////                        x = "" + (300 + i++%7);
+////                        y = "" + (200 + j++%13);
+////
+////                        new LoadImage().execute("https://unsplash.it/"+x+"/"+y);
+////                        Log.d("image", "http://" + IpAddress + "/picam/cam.jpg");
+//                        try {
+//                            new LoadImage().execute("http://" + IpAddress + "/picam/cam.jpg");
+//                            MyClientTask myClientTask = new MyClientTask(IpAddress,
+//                                    Integer.parseInt(port),
+//                                    getDataToSend(),
+//                                    socket
+//                            );
+//                            if (myClientTask.getStatus() == AsyncTask.Status.RUNNING) {
+//                                myClientTask.cancel(true);
+//                                Log.d("Timer", "myClientTask is Running, has been cancelled");
+//                            } else {
+//                                myClientTask.execute();
+//                                Log.d("Timer", "myClientTask has been executed");
+//                            }
+//
+//                        } catch (Exception e) {
+//                            e.printStackTrace();
+//                        }
+//
+////                        if (myClientTask.getStatus() == AsyncTask.Status.RUNNING){
+////                            myClientTask.cancel(true);
+////                        }
+////                        else {
+////                            myClientTask.execute();
+////                        }
+//                    }
+//                }
+//            }, 0, 105);
+//        }
+//    }
 
     private boolean cleanup (){
         //close socket
         //stop background tasks
+        stop = true;
         try {
-            stop = true;
-            socket.close();
             mSensorManager.unregisterListener(this, mAcc);
             mSensorManager.unregisterListener(this, mMag);
-            return true;
-        } catch (IOException e) {
+        } catch (Exception e){
             e.printStackTrace();
+            finish();
             return false;
         }
+        try {
+            socket.close();
+//        } catch (Exception e){
+//            e.printStackTrace();
+//            return false;
+        } catch (ConnectException e){
+            e.printStackTrace();
+            finish();
+            return false;
+        } catch (IOException e){
+            e.printStackTrace();
+            finish();
+            return false;
+        }
+//        try {
+//            mWebView.setVisibility(View.GONE);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            finish();
+//            return false;
+//        }
+        return true;
 
     }
 
@@ -718,7 +820,9 @@ public class SocketClient extends AppCompatActivity
             stop = false;
             mSensorManager.registerListener(this, mAcc, SensorManager.SENSOR_DELAY_UI);
             mSensorManager.registerListener(this, mMag, SensorManager.SENSOR_DELAY_UI);
-            LoadImageRepeatedly();
+//            mWebView.setVisibility(View.VISIBLE);
+//            LoadImageRepeatedly();
+            MyClientTaskRepeated();
             return true;
         }catch (Exception e){
             return false;

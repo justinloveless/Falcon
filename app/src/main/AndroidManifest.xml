@@ -3,6 +3,8 @@
     package="com.example.justin.falcontest">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
@@ -17,7 +19,7 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".MainActivity"></activity>
+        <activity android:name=".MainActivity" />
         <activity
             android:name=".NavActivity"
             android:label="@string/title_activity_nav"
@@ -28,7 +30,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".Picam"></activity>
+        <activity android:name=".Picam" />
         <activity
             android:name=".Websocket"
             android:label="@string/title_activity_websocket"
@@ -41,23 +43,25 @@
         <activity
             android:name=".BluetoothLE"
             android:label="@string/title_activity_bluetooth_le"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".SocketClient"
             android:configChanges="orientation|keyboardHidden"
             android:label="@string/title_activity_socket"
             android:screenOrientation="landscape"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:theme="@style/AppTheme.NoActionBar" />
         <activity
             android:name=".Cardboard"
-            android:configChanges="orientation|keyboardHidden|screenSize"
-            android:label="@string/title_activity_cardboard"
-            android:parentActivityName=".NavActivity"
-            android:theme="@style/FullscreenTheme">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.example.justin.falcontest.NavActivity" />
+            android:screenOrientation="landscape">
+            <intent-filter>
+                <action android:name="com.google.intent.category.CARDBOARD" />
+            </intent-filter>
+
         </activity>
+
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version"/>
     </application>
 
 </manifest>
