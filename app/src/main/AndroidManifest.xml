@@ -4,6 +4,7 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
@@ -18,7 +19,10 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme"
+        android:name="android.support.multidex.MultiDexApplication">
+
+
         <activity android:name=".MainActivity" />
         <activity
             android:name=".NavActivity"
@@ -30,7 +34,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".Picam" />
+        <!--<activity android:name=".Picam" />-->
         <activity
             android:name=".Websocket"
             android:label="@string/title_activity_websocket"
@@ -50,14 +54,14 @@
             android:label="@string/title_activity_socket"
             android:screenOrientation="landscape"
             android:theme="@style/AppTheme.NoActionBar" />
-        <activity
-            android:name=".Cardboard"
-            android:screenOrientation="landscape">
-            <intent-filter>
-                <action android:name="com.google.intent.category.CARDBOARD" />
-            </intent-filter>
+        <!--<activity-->
+            <!--android:name=".Cardboard"-->
+            <!--android:screenOrientation="landscape">-->
+            <!--<intent-filter>-->
+                <!--<action android:name="com.google.intent.category.CARDBOARD" />-->
+            <!--</intent-filter>-->
 
-        </activity>
+        <!--</activity>-->
 
         <meta-data
             android:name="com.google.android.gms.version"

@@ -3,9 +3,9 @@ package com.example.justin.falcontest;
 import android.Manifest;
 import android.annotation.TargetApi;
 import android.app.AlertDialog;
-import android.app.Service;
+//import android.app.Service;
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothClass;
+//import android.bluetooth.BluetoothClass;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothManager;
@@ -15,18 +15,19 @@ import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
+//import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-import android.hardware.Sensor;
+//import android.hardware.Sensor;
+//import android.hardware.SensorManager;
 import android.location.LocationManager;
-import android.os.Binder;
+//import android.os.Binder;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.IBinder;
-import android.os.Looper;
+//import android.os.IBinder;
+//import android.os.Looper;
 import android.provider.Settings;
-import android.support.annotation.Nullable;
+//import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.view.View;
@@ -43,39 +44,39 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.annotation.TargetApi;
+//import android.annotation.TargetApi;
 import android.app.Activity;
-import android.bluetooth.BluetoothAdapter;
+//import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothGatt;
+//import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
-import android.bluetooth.BluetoothManager;
+//import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
-import android.bluetooth.le.BluetoothLeScanner;
+//import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
-import android.bluetooth.le.ScanFilter;
+//import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
-import android.bluetooth.le.ScanSettings;
-import android.content.Context;
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.os.Build;
-import android.os.Bundle;
-import android.os.Handler;
-import android.support.v7.app.ActionBarActivity;
+//import android.bluetooth.le.ScanSettings;
+//import android.content.Context;
+//import android.content.Intent;
+//import android.content.pm.PackageManager;
+//import android.os.Build;
+//import android.os.Bundle;
+//import android.os.Handler;
+//import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
-import android.widget.Toast;
+//import android.widget.Toast;
 
 //import com.example.justin.falcontest.common.BluetoothLeService;
 
-import java.security.Provider;
+//import java.security.Provider;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import java.util.List;
+//import java.util.List;
 import java.util.UUID;
 
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
@@ -93,15 +94,11 @@ public class BluetoothLE extends AppCompatActivity
     private BluetoothGatt mGatt;
     public ScanSettings settings;
     public ListView serviceList;
-    public String[] serviceArray = {"Item 1", "Item 2", "Item 3", "Item 4", "Item 5", "Item 6", "Item 7", "Item 8",
-        "Item 9", "Item 10", "Item 11", "Item 12", "Item 13", "Item 14", "Item 15"};
     public ArrayList<String> sArray = new ArrayList<String>();
     public ArrayAdapter ServiceAdapter;
-    public TextView deviceName;
     public TextView description;
     public Button scan;
     public String devName;
-    private BluetoothGatt mBluetoothGatt;
     private ArrayList<ArrayList<BluetoothGattCharacteristic>> mGattCharacteristics =
             new ArrayList<ArrayList<BluetoothGattCharacteristic>>();
     public List<BluetoothGattService> mServices;
@@ -239,10 +236,10 @@ public class BluetoothLE extends AppCompatActivity
 
         if (id == R.id.nav_webview) {
             // Handle the webview activity
-            Intent intent = new Intent(BluetoothLE.this, Picam.class);
-            String IpAddr = "@string/IPAddress";
-            intent.putExtra("IP", IpAddr);
-            startActivity(intent);
+//            Intent intent = new Intent(BluetoothLE.this, Picam.class);
+//            String IpAddr = "@string/IPAddress";
+//            intent.putExtra("IP", IpAddr);
+//            startActivity(intent);
 
         } else if (id == R.id.nav_ipsettings) {
             // Handle the ip settings activity
@@ -465,6 +462,14 @@ public class BluetoothLE extends AppCompatActivity
         public double m_z = 0;
         public boolean connParamWritten = false;
         public long prevNot, curNot;
+        float[] inR = new float[16];
+        float[] outR = new float[16];
+        float[] I = new float[16];
+        float[] gravity = new float[3];
+        float[] geomag = new float[3];
+        float[] orientVals = new float[3];
+        double Roll, Pitch;
+
 
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
@@ -489,41 +494,31 @@ public class BluetoothLE extends AppCompatActivity
             }
 
         }
+
+        /*
+        * Runs when a notification occurs
+        * */
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic){
-//            String uuidVal = characteristic.getUuid().toString();
-//            Log.i("Notice"," "+SensorTagGatt.lookup(uuidVal, "notFound")+" = "+ uuidVal);
-//            if (characteristic.getUuid().toString().equals("f000aa82-0451-4000-b000-000000000000")) {
-            curNot = System.currentTimeMillis();
-            if (curNot - prevNot < 75){
-                Log.e("QuickNotice", "Notification happened too quickly");
-            }
-            prevNot = curNot;
-                byte[] val = characteristic.getValue();
-                g_x = ((val[1] << 8) + val[0]) / 128.0;
-                g_y = ((val[3] << 8) + val[2]) / 128.0;
-                g_z = ((val[5] << 8) + val[4]) / 128.0;
-                a_x = (((val[7] << 8) + val[6]) / (32768.0 / 8.0)) * -1;
-                a_y = ((val[9] << 8) + val[8]) / (32768.0 / 8.0);
-                a_z = (((val[11] << 8) + val[10]) / (32768.0 / 8.0)) * -1;
-                m_x = 1.0 * ((val[13] << 8) + val[12])/* / (32768 / 4912)*/;
-                m_y = 1.0 * ((val[15] << 8) + val[14]) /*/ (32768 / 4912)*/;
-                m_z = 1.0 * ((val[17] << 8) + val[16])/* / (32768 / 4912)*/;
-                Log.i("Notice", String.format("\tGyr: \t%.2f\t%.2f\t%.2f\tAcc: \t%.2f\t%.2f\t%.2f\tMag: \t%.2f\t%.2f\t%.2f"
-                        , g_x, g_y, g_z
-                        , a_x, a_y, a_z
-                        , m_x, m_y, m_z));
 
-//            }else if (characteristic.getUuid().toString().equals("f000ccc1-0451-4000-b000-000000000000")){
-//                connParamWritten = true;
-//            }
+            byte[] val = characteristic.getValue();
+            g_x = ((val[1] << 8) + val[0]) / 128.0;
+            g_y = ((val[3] << 8) + val[2]) / 128.0;
+            g_z = ((val[5] << 8) + val[4]) / 128.0;
+            a_x = (((val[7] << 8) + val[6]) / (32768.0 / 8.0)) * -1;
+            a_y = ((val[9] << 8) + val[8]) / (32768.0 / 8.0);
+            a_z = (((val[11] << 8) + val[10]) / (32768.0 / 8.0)) * -1;
+            m_x = 1.0 * ((val[13] << 8) + val[12])/* / (32768 / 4912)*/;
+            m_y = 1.0 * ((val[15] << 8) + val[14]) /*/ (32768 / 4912)*/;
+            m_z = 1.0 * ((val[17] << 8) + val[16])/* / (32768 / 4912)*/;
+//            Log.i("Notice2", String.format("\tGyr: \t%.2f\t%.2f\t%.2f\tAcc: \t%.2f\t%.2f\t%.2f\tMag: \t%.2f\t%.2f\t%.2f"
+//                    , g_x, g_y, g_z
+//                    , a_x, a_y, a_z
+//                    , m_x, m_y, m_z));
+            Roll = Roll - Roll/5.0 + (Math.atan2(a_y, a_z)*180/Math.PI)/5.0;
+            Pitch = Pitch - Pitch/5.0 + (Math.atan2(a_x, Math.sqrt(a_y*a_y + a_z*a_z)) *180/Math.PI)/5.0;
+            Log.d("BLE vals", String.format("Pitch:\t%.2f\tRoll:\t%.2f" , Pitch, Roll));
 
-//            if (gatt.getConnectionState(gatt.getDevice()) == BluetoothProfile.STATE_DISCONNECTED){
-//            if (bluetoothManager.getConnectionState(gatt.getDevice(), BluetoothProfile.GATT) == BluetoothProfile.STATE_DISCONNECTED){
-//                Log.e("gattCallback", "STATE_DISCONNECTED");
-//                connectToDevice(gatt.getDevice());
-//                Log.e("gattCallback", "reconnecting");
-//            }
         }
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
@@ -588,14 +583,16 @@ public class BluetoothLE extends AppCompatActivity
                     Log.d(TAG, "" + mGatt.writeCharacteristic(mCh));
                     break;
                 case 2: //write motion notification descriptor
-                    mSvc = mServices.get(6);
-                    mCh = mSvc.getCharacteristic(
-                            UUID.fromString("f000aa81-0451-4000-b000-000000000000"));
-                    mDes = mCh.getDescriptors().get(0);
-                    mDes.setValue(new byte[] {0x01, 0x00}); //enable remotely
-                    mGatt.setCharacteristicNotification(mCh, true); // enable locally
-                    Log.d(TAG, "" + mGatt.writeDescriptor(mDes));
-                    prevNot = System.currentTimeMillis();
+//                    mSvc = mServices.get(6);
+//                    mCh = mSvc.getCharacteristic(
+//                            UUID.fromString("f000aa81-0451-4000-b000-000000000000"));
+//                    mDes = mCh.getDescriptors().get(0);
+//                    mDes.setValue(new byte[] {0x01, 0x00}); //enable remotely
+//                    mGatt.setCharacteristicNotification(mCh, true); // enable locally
+//                    Log.d(TAG, "" + mGatt.writeDescriptor(mDes));
+//                    prevNot = System.currentTimeMillis();
+                    advanceRW();
+                    SensorTagCommunication();
                     break;
 //                case 101: //set up notifications on ccc1
 //                    mSvc = mServices.get(11);
@@ -649,23 +646,26 @@ public class BluetoothLE extends AppCompatActivity
 
         @Override
         public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-            Log.d("CharRead", "reading Characteristic");
+//            Log.d("CharRead", "reading Characteristic");
             if (characteristic.getUuid().toString().equals("f000aa81-0451-4000-b000-000000000000") ) {
                 byte[] val = characteristic.getValue();
                 char[] val_s = characteristic.getValue().toString().toCharArray();
-                g_x = ((val[1] << 8) + val[0]) / 128.0;
-                g_y = ((val[3] << 8) + val[2]) / 128.0;
-                g_z = ((val[5] << 8) + val[4]) / 128.0;
+//                g_x = ((val[1] << 8) + val[0]) / 128.0;
+//                g_y = ((val[3] << 8) + val[2]) / 128.0;
+//                g_z = ((val[5] << 8) + val[4]) / 128.0;
                 a_x = (((val[7] << 8) + val[6]) / (32768.0 / 2.0)) * -1;
                 a_y = ((val[9] << 8) + val[8]) / (32768.0 / 2.0);
                 a_z = (((val[11] << 8) + val[10]) / (32768.0 / 2.0)) * -1;
                 //magnetometer conversion is done on chip, so no calculation should be needed
-                m_x = 1.0 * ((val[13] << 8) + val[12])/* / (32768 / 4912)*/;
-                m_y = 1.0 * ((val[15] << 8) + val[14]) /*/ (32768 / 4912)*/;
-                m_z = 1.0 * ((val[17] << 8) + val[16])/* / (32768 / 4912)*/;
-                Log.i("value", "\tGyr: \t" + g_x + "\t,\t" + g_y + "\t,\t" + g_z
-                        + "\tAcc: \t" + a_x + "\t,\t" + a_y + "\t,\t" + a_z
-                        + "\tMag: \t" + m_x + "\t,\t" + m_y + "\t,\t" + m_z);
+//                m_x = 1.0 * ((val[13] << 8) + val[12])/* / (32768 / 4912)*/;
+//                m_y = 1.0 * ((val[15] << 8) + val[14]) /*/ (32768 / 4912)*/;
+//                m_z = 1.0 * ((val[17] << 8) + val[16])/* / (32768 / 4912)*/;
+//                Log.i("value", "\tGyr: \t" + g_x + "\t,\t" + g_y + "\t,\t" + g_z
+//                        + "\tAcc: \t" + a_x + "\t,\t" + a_y + "\t,\t" + a_z
+//                        + "\tMag: \t" + m_x + "\t,\t" + m_y + "\t,\t" + m_z);
+                Roll = Roll - Roll/5.0 + (Math.atan2(a_y, a_z)*180/Math.PI)/5.0;
+                Pitch = Pitch - Pitch/5.0 + (Math.atan2(a_x, Math.sqrt(a_y*a_y + a_z*a_z)) *180/Math.PI)/5.0;
+                Log.d("BLE vals", String.format("Pitch:\t%.2f\tRoll:\t%.2f" , Pitch, Roll));
             }
             else if (characteristic.getUuid().toString().equals("f000ccc1-0451-4000-b000-000000000000") ){
                 byte[] val = characteristic.getValue();
@@ -676,7 +676,7 @@ public class BluetoothLE extends AppCompatActivity
                         + slvLat + " Supervisor Timeout" + supTO);
             }
             //TODO uncomment this line to repeatedly read Movement Sensor
-//            mGatt.readCharacteristic(characteristic);
+            mGatt.readCharacteristic(characteristic);
 //            SensorTagCommunication();
         }
 
@@ -703,8 +703,8 @@ public class BluetoothLE extends AppCompatActivity
                 sent += "[" + val[j] + "] ";
             }
 //            Log.i("onCharacteristicWrite", "i=" + i);
-            Log.i("onCharacteristicWrite", "bytes written:" + val.length + " {"+sent +"} to " + characteristic.getUuid().toString());
-            advanceRW();
+            Log.i("onCharacteristicWrite", "status: " + status + " bytes written:" + val.length +
+                    " {"+sent +"} to " + characteristic.getUuid().toString()); advanceRW();
             SensorTagCommunication();
         }
         @Override

@@ -12,25 +12,25 @@ import com.google.vrtoolkit.cardboard.Viewport;
 import javax.microedition.khronos.egl.EGLConfig;
 
 public class Cardboard extends CardboardActivity implements CardboardView.StereoRenderer {
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_cardboard);
-        CardboardView cardboardView = (CardboardView) findViewById(R.id.cardboard_view);
-        cardboardView.setRenderer(this);
-        cardboardView.setTransitionViewEnabled(true);
-        cardboardView.setOnCardboardBackButtonListener(new Runnable() {
-            @Override
-            public void run() {
-                onBackPressed();
-            }
-        });
-        setCardboardView(cardboardView);
-
-
-    }
-
+//
+//    @Override
+//    protected void onCreate(Bundle savedInstanceState) {
+//        super.onCreate(savedInstanceState);
+//        setContentView(R.layout.activity_cardboard);
+//        CardboardView cardboardView = (CardboardView) findViewById(R.id.cardboard_view);
+//        cardboardView.setRenderer(this);
+//        cardboardView.setTransitionViewEnabled(true);
+//        cardboardView.setOnCardboardBackButtonListener(new Runnable() {
+//            @Override
+//            public void run() {
+//                onBackPressed();
+//            }
+//        });
+//        setCardboardView(cardboardView);
+//
+//
+//    }
+//
     @Override
     public void onNewFrame(HeadTransform headTransform) {
 

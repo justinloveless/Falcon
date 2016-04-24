@@ -12,6 +12,7 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -24,6 +25,7 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.text.format.Formatter;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -43,8 +45,11 @@ import com.google.api.services.gmail.GmailScopes;
 import com.google.api.services.gmail.model.Label;
 import com.google.api.services.gmail.model.ListLabelsResponse;
 import java.io.IOException;
+import java.net.Inet4Address;
+import java.net.NetworkInterface;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.http.HttpTransport;
@@ -68,6 +73,7 @@ public class NavActivity extends AppCompatActivity
     private static final String PREF_ACCOUNT_NAME = "falconv.uh@gmail.com";
     SharedPreferences mPrefs;
     String fetchedHistId;
+    String localIp;
     String IpAddress;
     String Port;
     String HistId;
@@ -241,6 +247,17 @@ public class NavActivity extends AppCompatActivity
             @Override
             public void onClick(View v){
                 getResultsFromApi();
+                localIp = checkLocalIp();
+                if (!localIp.startsWith("172.25.")){
+                    runOnUiThread(new Runnable(){
+                        public void run(){
+                            Toast.makeText(getApplicationContext(),
+                                    "!!!Please connect to UHWireless or UHVPN!!!",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                    //TODO request connection to UHWireless or UHVPN
+                }
             }
         });
 //        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
@@ -703,10 +720,10 @@ public class NavActivity extends AppCompatActivity
             // Handle the webview activity
 //            mSensorManager.unregisterListener(this, mAcc);
 //            mSensorManager.unregisterListener(this, mMag);
-            Intent intent = new Intent(NavActivity.this, Picam.class);
-            String IpAddr = "@string/IPAddress";
-            intent.putExtra("IP", IpAddr);
-            startActivity(intent);
+//            Intent intent = new Intent(NavActivity.this, Picam.class);
+//            String IpAddr = "@string/IPAddress";
+//            intent.putExtra("IP", IpAddr);
+//            startActivity(intent);
 
         } else if (id == R.id.nav_ipsettings) {
             // Handle the ip settings activity
@@ -730,8 +747,8 @@ public class NavActivity extends AppCompatActivity
             startActivity(intent);
 
         } else if (id == R.id.nav_share) {
-            Intent intent = new Intent(NavActivity.this, Cardboard.class);
-            startActivity(intent);
+//            Intent intent = new Intent(NavActivity.this, Cardboard.class);
+//            startActivity(intent);
 
         } else if (id == R.id.nav_send) {
 
@@ -807,5 +824,13 @@ public class NavActivity extends AppCompatActivity
     @Override
     public void onPermissionsDenied(int requestCode, List<String> perms) {
         // Do nothing.
+    }
+
+    public String checkLocalIp(){
+        String TAG = "Network";
+        WifiManager wm = (WifiManager) getSystemService(WIFI_SERVICE);
+        String ip = Formatter.formatIpAddress(wm.getConnectionInfo().getIpAddress());
+//        Log.d(TAG, "MyIP: " + ip);
+        return ip;
     }
 }

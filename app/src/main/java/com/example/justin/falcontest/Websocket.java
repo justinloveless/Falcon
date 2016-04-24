@@ -97,10 +97,10 @@ public class Websocket extends AppCompatActivity
 
         if (id == R.id.nav_webview) {
             // Handle the webview activity
-            Intent intent = new Intent(Websocket.this, Picam.class);
-            String IpAddr = "@string/IPAddress";
-            intent.putExtra("IP", IpAddr);
-            startActivity(intent);
+//            Intent intent = new Intent(Websocket.this, Picam.class);
+//            String IpAddr = "@string/IPAddress";
+//            intent.putExtra("IP", IpAddr);
+//            startActivity(intent);
 
         } else if (id == R.id.nav_ipsettings) {
             // Handle the ip settings activity
