@@ -964,7 +964,7 @@ public class SocketClient extends AppCompatActivity
                     Log.d("myClientTask", "Socket=" + (socket == null ? "null" : ("" + socket.toString())));
                     if (dataToSend != null && s != null) {
                         Log.d("sending", "About to send data");
-//                        if (dataToSend != "close") {
+                        if (dataToSend != "close") {
                             // add in a beginning of transmission symbol. The "=" symbol is arbitrary, but must
                             // be the same on the raspberry pi
                             dataToSend = "=" + dataToSend + "\n";
@@ -976,10 +976,11 @@ public class SocketClient extends AppCompatActivity
 //                            } catch(IOException e){
 //                                Log.e("socket", "Write was not able to complete");
 //                            }
-//                        } else {
-//                            socket.close();
-                        if (dataToSend == "close") {
+                        } else {
                             socket.close();
+//                        if (dataToSend == "close") {
+//                            socket.close();
+//                        }
                         }
                     }
                 }
@@ -1263,21 +1264,21 @@ public class SocketClient extends AppCompatActivity
             success = false;
         }
         new MyClientTask(IpAddress, Integer.parseInt(port), "close", socket);
-//        try {
-//            if (socket != null) {
-//                if (!socket.isClosed()) {
-//                    socket.close();
-//                }
-//            }
-//        } catch (ConnectException e){
-//            e.printStackTrace();
-////            return false;
-//            success = false;
-//        } catch (IOException e){
-//            e.printStackTrace();
-////            return false;
-//            success = false;
-//        }
+        try {
+            if (socket != null) {
+                if (!socket.isClosed()) {
+                    socket.close();
+                }
+            }
+        } catch (ConnectException e){
+            e.printStackTrace();
+//            return false;
+            success = false;
+        } catch (IOException e){
+            e.printStackTrace();
+//            return false;
+            success = false;
+        }
         mWebView.destroy();
         return success;
 
