@@ -246,6 +246,7 @@ public class NavActivity extends AppCompatActivity
         checkGmailButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v){
+                checkGmailButton.setEnabled(false);
                 getResultsFromApi();
                 localIp = checkLocalIp();
                 if (!localIp.startsWith("172.25.")){
@@ -258,6 +259,7 @@ public class NavActivity extends AppCompatActivity
                     });
                     //TODO request connection to UHWireless or UHVPN
                 }
+                checkGmailButton.setEnabled(true);
             }
         });
 //        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
@@ -288,10 +290,10 @@ public class NavActivity extends AppCompatActivity
             Log.d("getResultsFromApi", "GoglePlayServices aren't available");
             acquireGooglePlayServices();
         } else if (mCredential.getSelectedAccountName() == null) {
-            Log.d("getResultsFromApi", "No account is selected");
-            chooseAccount();
-            Log.d("getResultsFromApi", "Account is now: " + mCredential.getSelectedAccountName());
-            getResultsFromApi(); // re-call itself
+                Log.d("getResultsFromApi", "No account is selected");
+                chooseAccount();
+                Log.d("getResultsFromApi", "Account is now: " + mCredential.getSelectedAccountName());
+//            getResultsFromApi(); // re-call itself (THIS DOESN'T WORK EVEN THOUGH IT CAME FROM GOOGLE'S EXAMPLE CODE)
         }else if (! isDeviceOnline()) {
 //            mOutputText.setText("No network connection available.");
             Log.e("Gmail API", "No network connection available.");
