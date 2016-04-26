@@ -1,13 +1,13 @@
 <resources>
     <string name="google_app_id">cryptic-idiom-128002</string>
 
-    <string name="app_name">Falcon Test</string>
+    <string name="app_name">Falcon Eye</string>
     <string name="setIPAddress">xxx.xxx.xxx.xxx</string>
     <string name="setIPButton">Set IP Address</string>
     <string name="IPAddress">xxx.xxx.xxx.xxx</string>
     <string name="mvToWebViewButton">Move to Web View Activity</string>
     <string name="mvToNavDrwrButton">Move to Navigation Drawer Activity</string>
-    <string name="title_activity_nav">NavActivity</string>
+    <string name="title_activity_nav">Falcon Eye</string>
     <string name="usernameLabel">Username</string>
     <string name="passwordLabel">Password</string>
     <string name="setUser">Set Username</string>

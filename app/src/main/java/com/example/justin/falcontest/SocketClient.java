@@ -23,17 +23,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.Matrix;
-import android.graphics.Paint;
-import android.graphics.Path;
-import android.graphics.Rect;
-import android.graphics.RectF;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
-import android.graphics.drawable.InsetDrawable;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -43,8 +32,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.provider.Settings;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
@@ -59,11 +46,7 @@ import android.view.WindowManager;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.TextView;
 
 import java.io.DataOutputStream;
@@ -72,11 +55,10 @@ import java.io.OutputStream;
 import java.net.ConnectException;
 import java.net.Socket;
 import java.net.SocketAddress;
-import java.net.URL;
 import java.net.UnknownHostException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
@@ -84,9 +66,6 @@ import java.util.UUID;
 import android.os.AsyncTask;
 import android.widget.Toast;
 
-//import com.google.android.exoplayer.ExoPlaybackException;
-//import com.google.android.gms.analytics.HitBuilders;
-//import com.google.vrtoolkit.cardboard.CardboardView;
 
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
 public class SocketClient extends AppCompatActivity
@@ -116,9 +95,7 @@ public class SocketClient extends AppCompatActivity
     public BluetoothManager bluetoothManager;
     public ScanSettings settings;
     public String devName;
-    public ArrayList<String> sArray = new ArrayList<String>();
-    public ArrayAdapter ServiceAdapter;
-    public ListView serviceList;
+    public ArrayList<String> sArray = new ArrayList<>();
     Timer MyClientTaskTimer;
     boolean toastMade;
 
@@ -139,9 +116,7 @@ public class SocketClient extends AppCompatActivity
 
         settings_prefs = getSharedPreferences("SETTINGS", 0);
         IpAddress = settings_prefs.getString("IP", "xxx.xxx.xxx.xxx");
-//        final SharedPreferences.Editor  edit_ip = settings_prefs.edit();
         port = settings_prefs.getString("Port", "8888");
-//        final SharedPreferences.Editor edit_port = settings_prefs.edit();
 
         //Enable Javascript
         WebSettings ws = mWebView.getSettings();
@@ -182,10 +157,6 @@ public class SocketClient extends AppCompatActivity
             Log.i("Sensors", "There is an accelerometer");
         }
 
-
-
-
-
         //***********Bluetooth stuff**************//
         //check if BLE is supported
         mHandler = new Handler();
@@ -196,7 +167,7 @@ public class SocketClient extends AppCompatActivity
 
         Log.d("BLE", "BLE supported");
 
-        /*final BluetoothManager */bluetoothManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
+        bluetoothManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
         mBluetoothAdapter = bluetoothManager.getAdapter();
         //enable Bluetooth
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -233,7 +204,6 @@ public class SocketClient extends AppCompatActivity
         mSensorManager.registerListener(this, mAcc, SensorManager.SENSOR_DELAY_UI);
         mSensorManager.registerListener(this, mMag, SensorManager.SENSOR_DELAY_UI);
 
-//        MyClientTaskRepeated();
         MyClientTaskTimer = new Timer();
     }
 
@@ -242,7 +212,6 @@ public class SocketClient extends AppCompatActivity
     protected void onStart() {
         super.onStart();
         //happens immediately after onCreate() or onRestart();
-
     }
     @Override
     protected void onResume() {
@@ -256,7 +225,7 @@ public class SocketClient extends AppCompatActivity
                 settings = new ScanSettings.Builder()
                         .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
                         .build();
-                filters = new ArrayList<ScanFilter>();
+                filters = new ArrayList<>();
             }
             Log.d("onResume", "About to scan for devices");
             scanLeDevice(true);
@@ -287,7 +256,6 @@ public class SocketClient extends AppCompatActivity
 
     @Override
     protected void onDestroy(){
-//        cleanup();
         super.onDestroy();
         try {
             Log.d("onDestroy", "Got past super.onDestroy()");
@@ -301,7 +269,7 @@ public class SocketClient extends AppCompatActivity
             mGatt = null;
         }
         catch (Exception e) {
-            Log.e("onDestroy", e.getMessage().toString());
+            Log.e("onDestroy", e.getMessage());
         }
     }
 
@@ -358,11 +326,10 @@ public class SocketClient extends AppCompatActivity
 
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
-            Log.i("callbackType", String.valueOf(callbackType));
-            Log.i("result", result.toString());
-            BluetoothDevice btDevice = result.getDevice();
+//            Log.i("callbackType", String.valueOf(callbackType));
+//            Log.i("result", result.toString());
             if (result.getScanRecord().getDeviceName() != null) {
-                devName = result.getScanRecord().getDeviceName().toString();
+                devName = result.getScanRecord().getDeviceName();
                 if (!existsInArray(sArray, devName)){//only unique values
                     //add new string to array
                     sArray.add(devName);
@@ -372,11 +339,11 @@ public class SocketClient extends AppCompatActivity
                 devName = "null";
             }
 
-            Log.i("device Name", devName);
+//            Log.i("device Name", devName);
 
             //connect to CC2650 SensorTag
             if (devName.matches("CC2650 SensorTag")) {
-                Log.d("connecting", "Connecting to device: "+ devName);
+//                Log.d("connecting", "Connecting to device: "+ devName);
                 connectToDevice(result.getDevice());
             }
 
@@ -415,15 +382,6 @@ public class SocketClient extends AppCompatActivity
         if (mGatt == null) {
             mGatt = device.connectGatt(this, false, gattCallback);
             scanLeDevice(false);// will stop after first device detection
-            try {
-//                deviceName.setText(device.getName());
-//                deviceName.setText(devName);
-            } catch (Exception e) {
-                Log.e("ConnectToDevice", "Unable to set name. Device: " + device.toString()
-                        + "\nName: " + device.getName()
-                        + "\nError: " + e.getMessage() + " at line " + e.getStackTrace()[2].getLineNumber());
-                e.printStackTrace();
-            }
         }
         else {
             Log.e("connecToDevice", "mGatt not null: " + mGatt.toString());
@@ -435,24 +393,9 @@ public class SocketClient extends AppCompatActivity
         private int mReadWriteState = 0;
         private void advanceRW(){mReadWriteState++;}
         private void resetRWState() {mReadWriteState = 0;}
-        public int readState = 0;
-        public double g_x=0;
-        public double g_y=0;
-        public double g_z=0;
         public double a_x =0;
         public double a_y=0;
         public double a_z=0;
-        public double m_x = 0;
-        public double m_y = 0;
-        public double m_z = 0;
-        public boolean connParamWritten = false;
-        public long prevNot, curNot;
-        float[] inR = new float[16];
-        float[] outR = new float[16];
-        float[] I = new float[16];
-        float[] gravity = new float[3];
-        float[] geomag = new float[3];
-        float[] orientVals = new float[3];
         double Roll, Pitch;
 
 
@@ -482,24 +425,6 @@ public class SocketClient extends AppCompatActivity
 
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic){
-
-            byte[] val = characteristic.getValue();
-            g_x = ((val[1] << 8) + val[0]) / 128.0;
-            g_y = ((val[3] << 8) + val[2]) / 128.0;
-            g_z = ((val[5] << 8) + val[4]) / 128.0;
-            a_x = (((val[7] << 8) + val[6]) / (32768.0 / 8.0)) * -1;
-            a_y = ((val[9] << 8) + val[8]) / (32768.0 / 8.0);
-            a_z = (((val[11] << 8) + val[10]) / (32768.0 / 8.0)) * -1;
-            m_x = 1.0 * ((val[13] << 8) + val[12])/* / (32768 / 4912)*/;
-            m_y = 1.0 * ((val[15] << 8) + val[14]) /*/ (32768 / 4912)*/;
-            m_z = 1.0 * ((val[17] << 8) + val[16])/* / (32768 / 4912)*/;
-//            Log.i("Notice2", String.format("\tGyr: \t%.2f\t%.2f\t%.2f\tAcc: \t%.2f\t%.2f\t%.2f\tMag: \t%.2f\t%.2f\t%.2f"
-//                    , g_x, g_y, g_z
-//                    , a_x, a_y, a_z
-//                    , m_x, m_y, m_z));
-            Roll = Roll - Roll/5.0 + (Math.atan2(a_y, a_z)*180/Math.PI)/5.0;
-            Pitch = Pitch - Pitch/5.0 + (Math.atan2(a_x, Math.sqrt(a_y*a_y + a_z*a_z)) *180/Math.PI)/5.0;
-            Log.d("BLE vals", String.format("Pitch:\t%.2f\tRoll:\t%.2f" , Pitch, Roll));
 
         }
 
@@ -532,12 +457,6 @@ public class SocketClient extends AppCompatActivity
                     }
                 }
             }
-//            BluetoothGattService s = services.get(6);
-//            BluetoothGattCharacteristic c = s.getCharacteristics().get(1);
-//            byte[] val = new byte[1];
-//            val[0] = 0x7f;
-//            c.setValue(val);
-//            Log.d("writing", "" + gatt.writeCharacteristic(c));
             resetRWState();
             SensorTagCommunication();
         }
@@ -545,11 +464,9 @@ public class SocketClient extends AppCompatActivity
 
         public void SensorTagCommunication(){
             String TAG = "SensorTagComms";
-            BluetoothGattService mSvc = mServices.get(6);
-//            Log.d(TAG, "BT Gatt Svc = " + mSvc.toString());
+            BluetoothGattService mSvc;
             Log.d(TAG, "state: " + mReadWriteState);
             BluetoothGattCharacteristic mCh;
-            BluetoothGattDescriptor mDes;
             switch(mReadWriteState){
                 case 0: //write motion configuration
                     mSvc = mServices.get(6);
@@ -566,53 +483,9 @@ public class SocketClient extends AppCompatActivity
                     Log.d(TAG, "" + mGatt.writeCharacteristic(mCh));
                     break;
                 case 2: //write motion notification descriptor
-//                    mSvc = mServices.get(6);
-//                    mCh = mSvc.getCharacteristic(
-//                            UUID.fromString("f000aa81-0451-4000-b000-000000000000"));
-//                    mDes = mCh.getDescriptors().get(0);
-//                    mDes.setValue(new byte[] {0x01, 0x00}); //enable remotely
-//                    mGatt.setCharacteristicNotification(mCh, true); // enable locally
-//                    Log.d(TAG, "" + mGatt.writeDescriptor(mDes));
-//                    prevNot = System.currentTimeMillis();
                     advanceRW();
                     SensorTagCommunication();
                     break;
-//                case 101: //set up notifications on ccc1
-//                    mSvc = mServices.get(11);
-//                    mCh = mSvc.getCharacteristic(UUID.fromString("f000ccc1-0451-4000-b000-000000000000"));
-//                    mDes = mCh.getDescriptors().get(0);
-//                    mDes.setValue(new byte[] {0x01, 0x00}); //enable remotely
-//                    mGatt.setCharacteristicNotification(mCh, true); // enable locally
-//                    Log.d(TAG, "" + mGatt.writeDescriptor(mDes));
-//                    break;
-//                case 100: // write connection parameters
-//                    mSvc = mServices.get(11);
-//                    mCh = mSvc.getCharacteristic(UUID.fromString("f000ccc2-0451-4000-b000-000000000000"));
-//                    //TODO figure out connection parameters to get connection to be more steady
-//                    byte[] maxConInt = new byte[] {40,0};
-//                    byte[] minConInt = new byte[] {40,0};
-//                    byte[] slvLat = new byte[] {0,0};
-//                    byte[] supTO = new byte[] {0x7f,0x06};
-////                    byte[] tot = new byte[] {   supTO[1], supTO[0],slvLat[1], slvLat[0], minConInt[1],
-////                            minConInt[0],maxConInt[1], maxConInt[0]};
-//                    byte[] tot = new byte[] {maxConInt[0], maxConInt[1], minConInt[0],
-//                            minConInt[1], slvLat[0], slvLat[1], supTO[0], supTO[1]};
-//                    mCh.setValue(tot);
-//                    Log.d(TAG, "" + mGatt.writeCharacteristic(mCh));
-//                    break;
-//                case 102: // wait for notification from ccc1
-//                    //TODO wait until notification says that connection parameters have been written
-//                    if (connParamWritten){
-//                        advanceRW();
-//                    }
-//                    SensorTagCommunication();
-//                    break;
-//                case 105: //read connection parameters
-//                    mSvc = mServices.get(11);
-//                    mCh = mSvc.getCharacteristic(UUID.fromString("f000ccc1-0451-4000-b000-000000000000"));
-//                    Log.d(TAG, "" + mGatt.readCharacteristic(mCh));
-//                    advanceRW();
-//                    break;
                 case 3: //read data
                     mSvc = mServices.get(6);
                     mCh = mSvc.getCharacteristic(UUID.fromString("f000aa81-0451-4000-b000-000000000000"));
@@ -620,7 +493,6 @@ public class SocketClient extends AppCompatActivity
                     advanceRW();
                     break;
                 case 4: //empty state
-//                    MyClientTaskRepeated();
                     MyClientTaskTimer.scheduleAtFixedRate(MyClientTaskTimertask, 0, 100);
                     break;
                 default:
@@ -631,35 +503,21 @@ public class SocketClient extends AppCompatActivity
 
         @Override
         public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-//            Log.d("CharRead", "reading Characteristic");
             if (characteristic.getUuid().toString().equals("f000aa81-0451-4000-b000-000000000000") ) {
                 byte[] val = characteristic.getValue();
-                char[] val_s = characteristic.getValue().toString().toCharArray();
-//                g_x = ((val[1] << 8) + val[0]) / 128.0;
-//                g_y = ((val[3] << 8) + val[2]) / 128.0;
-//                g_z = ((val[5] << 8) + val[4]) / 128.0;
                 a_x = (((val[7] << 8) + val[6]) / (32768.0 / 2.0)) * -1;
                 a_y = ((val[9] << 8) + val[8]) / (32768.0 / 2.0);
                 a_z = (((val[11] << 8) + val[10]) / (32768.0 / 2.0)) * -1;
-                //magnetometer conversion is done on chip, so no calculation should be needed
-//                m_x = 1.0 * ((val[13] << 8) + val[12])/* / (32768 / 4912)*/;
-//                m_y = 1.0 * ((val[15] << 8) + val[14]) /*/ (32768 / 4912)*/;
-//                m_z = 1.0 * ((val[17] << 8) + val[16])/* / (32768 / 4912)*/;
-//                Log.i("value", "\tGyr: \t" + g_x + "\t,\t" + g_y + "\t,\t" + g_z
-//                        + "\tAcc: \t" + a_x + "\t,\t" + a_y + "\t,\t" + a_z
-//                        + "\tMag: \t" + m_x + "\t,\t" + m_y + "\t,\t" + m_z);
                 //calculate roll
                 Roll = (Math.atan2(a_y, a_z)*180/Math.PI);
                 //calculate pitch
                 Pitch = (Math.atan2(a_x, Math.sqrt(a_y*a_y + a_z*a_z)) *180/Math.PI);
-//                Log.d("BLE vals", String.format("Pitch:\t%.2f\tRoll:\t%.2f" , Pitch, Roll));
 
 
                 //map Pitch to pitch command values
                 Pitch = dPitchMin + ((dPitchMax - dPitchMin)/(pitchMax - pitchMin))*(Pitch - pitchMin);
                 pitchAvg = pitchAvg*(1.0 - 1.0/avgRange) + Pitch/avgRange; // calculate exponential average
-//                    pitch.setText("pitch = " + String.format("%.0f", mPitch));
-                sPitch = String.format("%.0f", pitchAvg);
+                sPitch = String.format(Locale.US, "%.0f", pitchAvg);
 
 
                 if ( Roll > 10 || Roll < -10){// roll control
@@ -667,23 +525,15 @@ public class SocketClient extends AppCompatActivity
                         Roll = rollMax;
                     else if (Roll < rollMin)
                         Roll = rollMin;
-//                    Log.d("sensors", "outter");
                     Roll = dRollMin + ((dRollMax - dRollMin)/(rollMax - rollMin))*(Roll - rollMin);
                     rollAvg = rollAvg*(1.0 - 1.0/avgRange) + Roll/avgRange; // calculate exponential average
-//                    roll.setText("roll = " + String.format("%.0f", mRoll));
-                    sRoll = String.format("%.0f", rollAvg);
+                    sRoll = String.format(Locale.US, "%.0f", rollAvg);
                 }else {
-//                    Log.d("sensors", "inner");
                     Roll = (dRollMax - dRollMin)/2 + dRollMin;
                     rollAvg = rollAvg*(1.0 - 1.0/avgRange) + Roll/avgRange; // calculate exponential average
-//                    roll.setText("roll = " + String.format("%.0f", mRoll));
-                    sRoll = String.format("%.0f", rollAvg);
+                    sRoll = String.format(Locale.US, "%.0f", rollAvg);
                 }
-
-
                 sensorData = (sRoll + "," + sPitch + "," + sThrottle + "," + sYaw);
-//                sensorVals.setText(sensorData);
-//                Log.d("sensors2", sensorData);
                 setSensorData(sensorData);
             }
             else if (characteristic.getUuid().toString().equals("f000ccc1-0451-4000-b000-000000000000") ){
@@ -694,9 +544,8 @@ public class SocketClient extends AppCompatActivity
                 Log.d("connectionParams","Connection Interval: " + cnctInt + " Slave Latency: "
                         + slvLat + " Supervisor Timeout" + supTO);
             }
-            //TODO uncomment this line to repeatedly read Movement Sensor
+            //repeatedly read Movement Sensor
             mGatt.readCharacteristic(characteristic);
-//            SensorTagCommunication();
         }
 
 
@@ -716,12 +565,10 @@ public class SocketClient extends AppCompatActivity
         @Override
         public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
             byte[] val = characteristic.getValue();
-            int i = val[0];
             String sent = "";
-            for (int j = 0; j < val.length; j++){
-                sent += "[" + val[j] + "] ";
+            for (byte aVal : val) {
+                sent += "[" + aVal + "] ";
             }
-//            Log.i("onCharacteristicWrite", "i=" + i);
             Log.i("onCharacteristicWrite", "status: " + status + " bytes written:" + val.length +
                     " {"+sent +"} to " + characteristic.getUuid().toString());
             advanceRW();
@@ -763,7 +610,6 @@ public class SocketClient extends AppCompatActivity
                     });
                     builder.show();
                 }
-                return;
             }
         }
     }
@@ -794,7 +640,6 @@ public class SocketClient extends AppCompatActivity
     private static final double yawMax = 180;
     private static final double avgRange = 15;
     private double pitchAvg, rollAvg, throttleAvg, yawAvg;
-    private double yawInit;
     String sPitch, sRoll, sThrottle, sYaw, sensorData;
     @Override
     public void onSensorChanged(SensorEvent event) {
@@ -805,16 +650,9 @@ public class SocketClient extends AppCompatActivity
             yawAvg = (dYawMax - dYawMin)/2.0 + dYawMin;
         }
         if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER){
-//            Log.i("Acc", String.format("%.2f\t%.2f\t%.2f", event.values[0], event.values[1], event.values[2]));
             gravity = event.values.clone();
-        } else if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE){
-//            Log.i("Gyr", String.format("%.2f\t%.2f\t%.2f", event.values[0], event.values[1], event.values[2]));
         } else if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD){
-//            Log.i("Mag", String.format("%.2f\t%.2f\t%.2f", event.values[0], event.values[1], event.values[2]));
             geomag = event.values.clone();
-        } else if (event.sensor.getType() == Sensor.TYPE_GAME_ROTATION_VECTOR){
-//            Log.i("Rot", String.format("%.2f\t%.2f\t%.2f", event.values[0],
-//                    event.values[1],event.values[2]));
         }
         if (gravity != null && geomag != null){ //wait until the first time the sensors are gathered
             boolean success = SensorManager.getRotationMatrix(inR, I, gravity, geomag);
@@ -823,76 +661,30 @@ public class SocketClient extends AppCompatActivity
                 SensorManager.getOrientation(outR, orientVals);
                 double mAzimuth = Math.toDegrees(orientVals[0]);
                 double mPitch = Math.toDegrees(orientVals[1])*-1.0;
-                double mRoll = Math.toDegrees(orientVals[2])*-1.0;
-//                pitch.setText("pitch = " + String.format("%.3f", mPitch));
-//                roll.setText(String.format("%.3f",  mRoll));
-//                sRoll = String.format("%.3f",  mRoll);
-//                yaw.setText(String.format("%.3f", mAzimuth));
-                sYaw = String.format("%.3f", mAzimuth);
-//                Log.i("orient", String.format("%.2f\t%.2f\t%.2f", mAzimuth, mPitch, mRoll));
-//                if (mPitch > 15 || mPitch < -15){//throttle control
-                    if (mPitch > pitchMax)
-                        mPitch = pitchMax;
-                    else if (mPitch < pitchMin)
-                        mPitch = pitchMin;
-                    if (mPitch > 10){ // create window of control for throttle
-                        mPitch = dThrottleNom
-                                + ((dThrottleMax - dThrottleNom)/(pitchMax  - 15))*(mPitch - 15);
-                        throttleAvg = throttleAvg*(1.0 - 1.0/avgRange) + mPitch/avgRange; // calculate exponential average
-                    }else if (mPitch < -10){
-                        mPitch = dThrottleMin
-                                + ((dThrottleNom - dThrottleMin)/(-15  - pitchMin))*(mPitch - pitchMin);
-                        throttleAvg = throttleAvg*(1.0 - 1.0/avgRange) + mPitch/avgRange; // calculate exponential average
-                    } else { // handle "throttle latch zone"
-                        mPitch = (dThrottleMax - dThrottleMin)/2 + dThrottleMin;
-                        throttleAvg = throttleAvg*(1.0 - 1.0/avgRange) + mPitch/avgRange; // calculate exponential average
-                    }
-//                    mPitch = dThrottleMin + ((dThrottleMax - dThrottleMin)/(pitchMax  - pitchMin))*(mPitch - pitchMin);
-//                    throttle.setText("throttle = " + String.format("%.0f", mPitch));
-                    sThrottle = String.format("%.0f", throttleAvg);
-//                    mPitch = (dPitchMax - dPitchMin)/2 + dPitchMin;
-//                    pitchAvg = pitchAvg*(1.0 - 1.0/avgRange) + mPitch/avgRange; // calculate exponential average
-////                    pitch.setText("pitch = " + String.format("%.0f", mPitch));
-//                    sPitch = String.format("%.0f", pitchAvg);
-//                }
-//                else { //pitch control
-////                    mPitch = dPitchMin + ((dPitchMax - dPitchMin)/(pitchMax - pitchMin))*(mPitch - pitchMin);
-////                    pitchAvg = pitchAvg*(1.0 - 1.0/avgRange) + mPitch/avgRange; // calculate exponential average
-//////                    pitch.setText("pitch = " + String.format("%.0f", mPitch));
-////                    sPitch = String.format("%.0f", pitchAvg);
-//                    mPitch = (dThrottleMax - dThrottleMin)/2 + dThrottleMin;
-//                    throttleAvg = throttleAvg*(1.0 - 1.0/avgRange) + mPitch/avgRange; // calculate exponential average
-////                    throttle.setText("throttle = " + String.format("%.0f", mPitch));
-//                    sThrottle = String.format("%.0f", throttleAvg);
-//                }
-//                Log.d("sensors", "roll = " + mRoll);
-//                if ( mRoll > 100 || mRoll < 80){// roll control
-//                    if (mRoll > rollMax)
-//                        mRoll = rollMax;
-//                    else if (mRoll < rollMin)
-//                        mRoll = rollMin;
-////                    Log.d("sensors", "outter");
-//                    mRoll = dRollMin + ((dRollMax - dRollMin)/(rollMax - rollMin))*(mRoll - rollMin);
-//                    rollAvg = rollAvg*(1.0 - 1.0/avgRange) + mRoll/avgRange; // calculate exponential average
-////                    roll.setText("roll = " + String.format("%.0f", mRoll));
-//                    sRoll = String.format("%.0f", rollAvg);
-//                }else {
-////                    Log.d("sensors", "inner");
-//                    mRoll = (dRollMax - dRollMin)/2 + dRollMin;
-//                    rollAvg = rollAvg*(1.0 - 1.0/avgRange) + mRoll/avgRange; // calculate exponential average
-////                    roll.setText("roll = " + String.format("%.0f", mRoll));
-//                    sRoll = String.format("%.0f", rollAvg);
-//                }
+                sYaw = String.format(Locale.US,"%.3f", mAzimuth);
+                if (mPitch > pitchMax)
+                    mPitch = pitchMax;
+                else if (mPitch < pitchMin)
+                    mPitch = pitchMin;
+                if (mPitch > 10){ // create window of control for throttle
+                    mPitch = dThrottleNom
+                            + ((dThrottleMax - dThrottleNom)/(pitchMax  - 15))*(mPitch - 15);
+                    throttleAvg = throttleAvg*(1.0 - 1.0/avgRange) + mPitch/avgRange; // calculate exponential average
+                }else if (mPitch < -10){
+                    mPitch = dThrottleMin
+                            + ((dThrottleNom - dThrottleMin)/(-15  - pitchMin))*(mPitch - pitchMin);
+                    throttleAvg = throttleAvg*(1.0 - 1.0/avgRange) + mPitch/avgRange; // calculate exponential average
+                } else { // handle "throttle latch zone"
+                    mPitch = (dThrottleMax - dThrottleMin)/2 + dThrottleMin;
+                    throttleAvg = throttleAvg*(1.0 - 1.0/avgRange) + mPitch/avgRange; // calculate exponential average
+                }
+                sThrottle = String.format(Locale.US, "%.0f", throttleAvg);
                 //yaw control
                 //TODO implement a BANG-BANG yaw control
                 mAzimuth = dYawMin + ((dYawMax - dYawMin)/(yawMax - yawMin))*(mAzimuth - yawMin);
-//                yaw.setText("yaw = " + String.format("%.0f", mAzimuth));
                 yawAvg = yawAvg*(1.0 - 1.0/avgRange) + mAzimuth/avgRange; // calculate exponential average
-//                yawAvg = ((dYawMax - dYawMin)/2+dYawMin)*(1.0 - 1.0/avgRange) + mAzimuth/avgRange; // calculate exponential average
-                sYaw = String.format("%.0f", yawAvg);
+                sYaw = String.format(Locale.US, "%.0f", yawAvg);
                 sensorData = (sRoll + "," + sPitch + "," + sThrottle + "," + sYaw);
-//                sensorVals.setText(sensorData);
-//                Log.d("sensors1", sensorData);
                 setSensorData(sensorData);
             }
         }
@@ -940,10 +732,9 @@ public class SocketClient extends AppCompatActivity
                     Log.d("myClientTask", "Socket is null or closed");
                     try {
                         socket = new Socket(dstAddress, dstPort); //make new socket if first pass
-                        if (socket == null || socket.isClosed())
+                        if (socket.isClosed())
                             Log.d("myClientTask", "new socket failed to be created");
                     } catch (ConnectException e){
-//                        e.printStackTrace();
                         if (!toastMade) {
                             runOnUiThread(new Runnable() {
                                 public void run() {
@@ -952,8 +743,6 @@ public class SocketClient extends AppCompatActivity
                             });
                             toastMade = true;
                         }
-//                        MyClientTaskTimer.cancel();
-//                        this.cancel(false);
 
                     }
                 }
@@ -971,16 +760,9 @@ public class SocketClient extends AppCompatActivity
                             Log.d("dataSent", dataToSend);
                             OutputStream toServer = socket.getOutputStream();
                             DataOutputStream out = new DataOutputStream(toServer);
-//                            try {
-                                out.writeUTF(dataToSend + "\n");
-//                            } catch(IOException e){
-//                                Log.e("socket", "Write was not able to complete");
-//                            }
+                            out.writeUTF(dataToSend + "\n");
                         } else {
                             socket.close();
-//                        if (dataToSend == "close") {
-//                            socket.close();
-//                        }
                         }
                     }
                 }
@@ -1043,40 +825,16 @@ public class SocketClient extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.nav_webview) {
-            // Handle the webview activity
-//            cleanup();
-//            Intent intent = new Intent(SocketClient.this, Picam.class);
-//            String IpAddr = "@string/IPAddress";
-//            intent.putExtra("IP", IpAddr);
-//            startActivity(intent);
-
-        } else if (id == R.id.nav_ipsettings) {
+        if (id == R.id.nav_ipsettings) {
             // Handle the ip settings activity
             cleanup();
-            Intent intent = new Intent(SocketClient.this, MainActivity.class);
-            startActivity(intent);
-
-        } else if (id == R.id.nav_websocket) {
-            // Handle the web socket activity
-            cleanup();
-            Intent intent = new Intent(SocketClient.this, Websocket.class);
-            startActivity(intent);
-
-        } else if (id == R.id.nav_bluetooth) {
-            // Handle the web socket activity
-            cleanup();
-            Intent intent = new Intent(SocketClient.this, BluetoothLE.class);
+            Intent intent = new Intent(SocketClient.this, IpSettings.class);
             startActivity(intent);
 
         } else if (id == R.id.nav_home) {
             cleanup();
             Intent intent = new Intent(SocketClient.this, NavActivity.class);
             startActivity(intent);
-
-        } else if (id == R.id.nav_share) {
-
-        } else if (id == R.id.nav_send) {
 
         }
 
@@ -1106,161 +864,18 @@ public class SocketClient extends AppCompatActivity
 
     };
 
-    private void MyClientTaskRepeated() {
-        Timer timer = new Timer();
-        if (stop == true){
-            timer.cancel();
-        } else {
-            timer.scheduleAtFixedRate(new TimerTask() {
-                @Override
-                public void run() {
-                    if (stop == true) {
-//                        mWebView.loadUrl("https://s-media-cache-ak0.pinimg.com/736x/a2/57/90/a2579035dbf671b787a302aa816477a3.jpg");
-                        this.cancel();
-                    } else {
-                        try {
-                            MyClientTask myClientTask = new MyClientTask(IpAddress,
-                                    Integer.parseInt(port),
-                                    getDataToSend(),
-                                    socket);
-                            if (myClientTask.getStatus() == AsyncTask.Status.RUNNING) {
-                                myClientTask.cancel(true);
-                            } else {
-                                myClientTask.execute();
-                            }
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-            }, 0, 100);
-        }
-    }
-
-//    public class LoadImage extends AsyncTask <String, Void, Bitmap>{
-//        @Override
-//        protected Bitmap doInBackground(String ... params) {
-//            try {
-//                InputStream is = (InputStream) new URL(params[0]).getContent();
-////                Drawable d = Drawable.createFromStream(is, null);
-//                Bitmap orig = BitmapFactory.decodeStream(is);
-////                Bitmap targetL = Bitmap.createBitmap(1920, 1080, Bitmap.Config.ARGB_8888);
-////                Canvas canvas = new Canvas(targetL);
-////                RectF rectF = new RectF(0,0,1200,1080);
-////                Path path = new Path();
-////                path.addRect(rectF, Path.Direction.CW);
-////                canvas.clipPath(path);
-////                canvas.drawBitmap(orig, new Rect(0, 0, orig.getWidth(), orig.getHeight()),
-////                        new Rect(0, 0, targetL.getWidth(), targetL.getHeight()), new Paint());
-////                Matrix m = new Matrix();
-////                m.postScale(1f, 1f);
-////                Bitmap resized = Bitmap.createBitmap(targetL, 0,0,1500,1080, m, true);
-////                BitmapDrawable bd = new BitmapDrawable(orig);
-//                return orig;
-//            }catch (Exception e) {
-//                return null;
-//            }
-//        }
-//        @Override
-//        protected void onPostExecute(Bitmap d){
-//            if (d != null){
-////                Bitmap targetL = Bitmap.createBitmap(1920, 1080, Bitmap.Config.ARGB_8888);
-////                Bitmap targetR = Bitmap.createBitmap(1920, 1080, Bitmap.Config.ARGB_8888);
-////                Canvas canvasL = new Canvas(targetL);
-////                Canvas canvasR = new Canvas(targetR);
-////                RectF rectFL = new RectF(0, 0, 1200, 1080);
-////                RectF rectFR = new RectF(720, 0, 1920, 1080);
-////                Path pathL = new Path();
-////                Path pathR = new Path();
-////                pathL.addRect(rectFL, Path.Direction.CW);
-////                pathR.addRect(rectFR, Path.Direction.CW);
-////                canvasL.clipPath(pathL);
-////                canvasR.clipPath(pathR);
-////                canvasL.drawBitmap(d, new Rect(0, 0, d.getWidth(), d.getHeight()),
-////                        new Rect(0, 0, targetL.getWidth(), targetL.getHeight()), new Paint());
-////                canvasR.drawBitmap(d, new Rect(0, 0, d.getWidth(), d.getHeight()),
-////                        new Rect(0, 0, targetR.getWidth(), targetR.getHeight()), new Paint());
-////                Matrix m = new Matrix();
-////                m.postScale(1f,1f);
-////                Bitmap resizedL = Bitmap.createBitmap(targetL, 0,0,1920,1080, m, true);
-////                Bitmap resizedR = Bitmap.createBitmap(targetR, 0,0,1920,1080, m, true);
-////                BitmapDrawable bdL = new BitmapDrawable(resizedL);
-////                BitmapDrawable bdR = new BitmapDrawable(resizedR);
-////                picam1.setImageDrawable(bdL);
-////                picam2.setImageDrawable(bdR);
-//                BitmapDrawable bd = new BitmapDrawable(d);
-//                picam1.setImageDrawable(bd);
-//                picam2.setImageDrawable(bd);
-//            } else {
-//                Toast.makeText(SocketClient.this, "Image doesn't exist, or network error", Toast.LENGTH_SHORT).show();
-//            }
-//        }
-//    }
-
-//    private void LoadImageRepeatedly() {
-//        Timer t = new Timer();
-//        if (stop == true){
-//            t.cancel();
-//        } else {
-//            t.scheduleAtFixedRate(new TimerTask() {
-//                //            String x = "", y = "";
-////            int i = 0, j = 0;
-//                @Override
-//                public void run() {
-//                    if (stop == true){
-//                        new LoadImage()
-//                                .execute("https://s-media-cache-ak0.pinimg.com/736x/a2/57/90/a2579035dbf671b787a302aa816477a3.jpg");
-//                        this.cancel();
-//                    } else {
-////                        x = "" + (300 + i++%7);
-////                        y = "" + (200 + j++%13);
-////
-////                        new LoadImage().execute("https://unsplash.it/"+x+"/"+y);
-////                        Log.d("image", "http://" + IpAddress + "/picam/cam.jpg");
-//                        try {
-//                            new LoadImage().execute("http://" + IpAddress + "/picam/cam.jpg");
-//                            MyClientTask myClientTask = new MyClientTask(IpAddress,
-//                                    Integer.parseInt(port),
-//                                    getDataToSend(),
-//                                    socket
-//                            );
-//                            if (myClientTask.getStatus() == AsyncTask.Status.RUNNING) {
-//                                myClientTask.cancel(true);
-//                                Log.d("Timer", "myClientTask is Running, has been cancelled");
-//                            } else {
-//                                myClientTask.execute();
-//                                Log.d("Timer", "myClientTask has been executed");
-//                            }
-//
-//                        } catch (Exception e) {
-//                            e.printStackTrace();
-//                        }
-//
-////                        if (myClientTask.getStatus() == AsyncTask.Status.RUNNING){
-////                            myClientTask.cancel(true);
-////                        }
-////                        else {
-////                            myClientTask.execute();
-////                        }
-//                    }
-//                }
-//            }, 0, 105);
-//        }
-//    }
 
     private boolean cleanup (){
         //close socket
         //stop background tasks
         boolean success = true;
-//        stop = true;
-
+        stop = true;
         MyClientTaskTimer.cancel();
         try {
             mSensorManager.unregisterListener(this, mAcc);
             mSensorManager.unregisterListener(this, mMag);
         } catch (Exception e){
             e.printStackTrace();
-//            return false;
             success = false;
         }
         new MyClientTask(IpAddress, Integer.parseInt(port), "close", socket);
@@ -1270,13 +885,8 @@ public class SocketClient extends AppCompatActivity
                     socket.close();
                 }
             }
-        } catch (ConnectException e){
-            e.printStackTrace();
-//            return false;
-            success = false;
         } catch (IOException e){
             e.printStackTrace();
-//            return false;
             success = false;
         }
         mWebView.destroy();
@@ -1291,8 +901,6 @@ public class SocketClient extends AppCompatActivity
             mSensorManager.registerListener(this, mAcc, SensorManager.SENSOR_DELAY_UI);
             mSensorManager.registerListener(this, mMag, SensorManager.SENSOR_DELAY_UI);
             mWebView.setVisibility(View.VISIBLE);
-//            LoadImageRepeatedly();
-//            MyClientTaskRepeated();
             MyClientTaskTimer.scheduleAtFixedRate(MyClientTaskTimertask,0,100);
             return true;
         }catch (Exception e){

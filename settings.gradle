@@ -1,1 +1,1 @@
-include ':app', ':commonwidget', ':core', ':panowidget', ':videowidget'
+include ':app'

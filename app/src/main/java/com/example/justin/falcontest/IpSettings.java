@@ -1,23 +1,14 @@
 package com.example.justin.falcontest;
 
-import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import java.util.List;
-
-public class MainActivity extends AppCompatActivity {
+public class IpSettings extends AppCompatActivity {
 
     public final static String EXTRA_MESSAGE = "com.example.justin.falcontest.MESSAGE";
     SharedPreferences settings_prefs;
@@ -29,12 +20,10 @@ public class MainActivity extends AppCompatActivity {
     TextView User_editor;
     TextView Pass_editor;
     TextView Port_editor;
-//    private SensorManager mSensorManager;
-//    private Sensor mAcc, mGyr, mMag;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_ipsettings);
 
         //when button is clicked, update text to have the new IP address.
         //this is just to confirm that the change went through
@@ -104,21 +93,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-//        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-//        mAcc = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-//        mGyr = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-//        mMag = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-//        mSensorManager.registerListener(this, mAcc, SensorManager.SENSOR_DELAY_FASTEST);
-//        mSensorManager.registerListener(this, mGyr, SensorManager.SENSOR_DELAY_FASTEST);
-//        mSensorManager.registerListener(this, mMag, SensorManager.SENSOR_DELAY_FASTEST);
-//        Log.i("sensors", "Sensors created");
-//        List<Sensor> mSensors = mSensorManager.getSensorList(Sensor.TYPE_ALL);
-//
-//        for (Sensor sensor: mSensors){
-//            Log.i("SensorListing", "name:\t" + sensor.getName() + "\tType:\t"+sensor.getType());
-//        }
-
-
     }
 
     @Override
@@ -131,14 +105,4 @@ public class MainActivity extends AppCompatActivity {
         IP_editor = (TextView) findViewById(R.id.setIP);
         IP_editor.setText(IpAddress);
     }
-
-//    @Override
-//    public void onSensorChanged(SensorEvent event) {
-//        Log.i("sensors", "Sensor Changed");
-//    }
-//
-//    @Override
-//    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-//        Log.i("sensors", "Accuracy Changed");
-//    }
 }
